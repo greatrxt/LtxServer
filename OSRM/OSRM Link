@@ -1,3 +1,5 @@
 //https://www.digitalocean.com/community/tutorials/how-to-set-up-an-osrm-server-on-ubuntu-14-04
 
 //https://github.com/Project-OSRM/osrm-backend/blob/master/docs/http.md
+
+Remember to upgrade India's data every 15 days from http://download.geofabrik.de/asia/india.html
