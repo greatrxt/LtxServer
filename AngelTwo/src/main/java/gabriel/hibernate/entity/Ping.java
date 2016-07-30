@@ -20,37 +20,37 @@ public class Ping implements Serializable {
 
 	@Id @GeneratedValue(strategy=GenerationType.IDENTITY)
 	@Column(name="ping_packet_id")
-	int id;
+	private long id;
 	
 	@Column(name="lastKnownLatitude")
-	double mLatitude;
+	private double mLatitude;
 	
 	@Column(name="lastKnownSnappedLongitude")
-	double mLongitude;
+	private double mLongitude;
 	
 	@Column(name="lastKnownSnappedLatitude")
-	double snappedLatitude;
+	private double snappedLatitude;
 	
 	@Column(name="lastKnownLongitude")
-	double snappedLongitude;
+	private double snappedLongitude;
 	
 	@Column(name="lastKnownLocationAccuracy")
-	double lastKnownLocationAccuracy;
+	private double lastKnownLocationAccuracy;
 	
 	@Column(name="battery_charge")
-	double batteryCharge;
+	private double batteryCharge;
 	
 	@Column(name="packet_created_time")
-	Date packetCreatedTime;
+	private Date packetCreatedTime;
 	
 	@Column(name="packet_received_time")
-	Date packetReceivedTime;
+	private Date packetReceivedTime;
 
-	public int getId() {
+	public long getId() {
 		return id;
 	}
 
-	public void setId(int id) {
+	public void setId(long id) {
 		this.id = id;
 	}
 

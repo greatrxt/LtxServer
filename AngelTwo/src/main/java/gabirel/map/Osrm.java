@@ -26,7 +26,7 @@ public class Osrm {
 	/**
 	 * Adds snapped lat lon value to location table
 	 */
-	public static void snapLocation(final int recordId){
+	public static void snapLocation(final long recordId){
 		new Thread(new Runnable() {
 //		new Timer().schedule(
 	//	new TimerTask() {
@@ -81,12 +81,4 @@ public class Osrm {
 		
 	}
 	
-	/**
-	 * Makes request to OSRM server running on port 5000 and fetches snapped lat lon
-	 * @param location
-	 * @return
-	 */
-	private static Location snapLocation(Location location){
-		return null;
-	}
 }

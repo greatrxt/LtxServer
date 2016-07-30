@@ -3,7 +3,7 @@ package gabriel.hibernate.entity;
 import java.io.Serializable;
 //Refer http://www.tutorialspoint.com/hibernate/hibernate_annotations.htm
 //http://www.codejava.net/frameworks/hibernate/hibernate-one-to-one-mapping-with-foreign-key-annotations-example
-
+import java.math.BigInteger;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -31,46 +31,46 @@ public class Location implements Serializable {
 	
 	@Id @GeneratedValue(strategy=GenerationType.IDENTITY)
 	@Column(name="location_packet_id")
-	int id;
+	private long id;
 	
 	@Column(name="mLatitude")
-	double mLatitude;
+	private double mLatitude;
 	
 	@Column(name="mLongitude")
-	double mLongitude;
+	private double mLongitude;
 	
 	@Column(name="snappedLatitude")
-	double snappedLatitude;
+	private double snappedLatitude;
 	
 	@Column(name="snappedLongitude")
-	double snappedLongitude;
+	private double snappedLongitude;
 	
 	@Column(name="mAccuracy")
-	double mAccuracy;
+	private double mAccuracy;
 	
 	@Column(name="mSpeed")
-	double mSpeed;
+	private double mSpeed;
 	
 	@Column(name="mDistance")
-	double mDistance;
+	private double mDistance;
 	
 	@Column(name="mAltitude")
-	double mAltitude;
+	private double mAltitude;
 	
 	@Column(name="mTime")
-	Date mTime;
+	private Date mTime;
 	
 	@Column(name="mBearing")
-	double mBearing;
+	private double mBearing;
 	
 	@Column(name="packet_received_time")
-	Date packetReceivedTime;
+	private Date packetReceivedTime;
 
-	public int getId() {
+	public long getId() {
 		return id;
 	}
 
-	public void setId(int id) {
+	public void setId(long id) {
 		this.id = id;
 	}
 

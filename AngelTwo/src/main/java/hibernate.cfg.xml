@@ -25,6 +25,8 @@
         <!-- Annotated entity classes -->     
         <mapping class="gabriel.hibernate.entity.Location"/>
 		<mapping class="gabriel.hibernate.entity.Ping"/>
+		<mapping class="gabriel.hibernate.entity.Driver"/>
+		<mapping class="gabriel.hibernate.entity.Vehicle"/>
         
     </session-factory>
 </hibernate-configuration>

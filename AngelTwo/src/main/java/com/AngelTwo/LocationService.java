@@ -1,5 +1,6 @@
 package com.AngelTwo;
 
+import gabriel.application.Application;
 import gabriel.hibernate.dao.LocationDao;
 import gabriel.utilities.SystemUtils;
 
@@ -45,13 +46,14 @@ public class LocationService {
 				long mTime = inputStreamJSON.getLong("mTime");
 				double mBearing = inputStreamJSON.getDouble("mBearing");
 				
-				boolean packetStored = LocationDao.storeLocationPacket(mLatitude, mLongitude, mAccuracy, mSpeed, mDistance, mAltitude, mTime, mBearing);
+				String result = LocationDao.storeLocationPacket(mLatitude, mLongitude, mAccuracy, mSpeed, mDistance, mAltitude, mTime, mBearing);
 
-				if(packetStored){
-					System.out.println("LOCATION Packet stored - "+inputStreamJSON.toString());
-				} else {
-					System.out.println("Failed to store LOCATION packet - "+ inputStreamJSON.toString());
+				if(!result.trim().equals(Application.SUCCESS)){
+					System.out.println("Failed to store LOCATION packet - "+ inputStreamJSON.toString());	
+					return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(result).build();
 				}
+				
+				System.out.println("LOCATION Packet stored - "+inputStreamJSON.toString());
 				return Response.status(Response.Status.OK).build();
 			
 		}

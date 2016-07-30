@@ -1,5 +1,6 @@
 package gabriel.hibernate.dao;
 
+import gabriel.application.Application;
 import gabriel.hibernate.entity.Location;
 import gabriel.utilities.HibernateUtil;
 import gabriel.utilities.SystemUtils;
@@ -14,6 +15,7 @@ import java.util.List;
 
 import org.hibernate.Criteria;
 import org.hibernate.Session;
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -34,7 +36,7 @@ public class LocationDao {
 	 * @param mBearing
 	 * @return
 	 */
-	public static boolean storeLocationPacket(double mLatitude, 
+	public static String storeLocationPacket(double mLatitude, 
 									double mLongitude, 
 									double mAccuracy, 
 									double mSpeed, 
@@ -44,7 +46,7 @@ public class LocationDao {
 									double mBearing){
 		
 		Session session = HibernateUtil.getSessionAnnotationFactory().openSession();
-		int saveId = -1;
+		long saveId = -1;
 		try {
 			session.beginTransaction();
 			Location location = new Location();
@@ -71,10 +73,10 @@ public class LocationDao {
 			//http://stackoverflow.com/questions/25561681/hibernate-get-id-after-save-object
 			saveId = location.getId();
 			session.getTransaction().commit();
-			return true;
+			return Application.SUCCESS;
 		} catch(Exception e){
 			e.printStackTrace();
-			return false;
+			return e.getMessage();
 		} finally {
 			session.close();
 			if(saveId!=-1){
@@ -105,6 +107,7 @@ public class LocationDao {
 	        }
 	        Criteria criteria = session.createCriteria(Location.class);
 	        criteria.setFirstResult((int) (total - numOfRecords));
+	        criteria.addOrder(Order.asc("mTime"));	//VERY VERY IMPORTANT !
 	        criteria.setMaxResults(numOfRecords);
 
 	        List<Location> list = criteria.list();
@@ -118,6 +121,7 @@ public class LocationDao {
 		        	locationJson.put("mAccuracy", location.getmAccuracy());
 		        	locationJson.put("mSpeed", location.getmSpeed());
 		        	locationJson.put("mTime", location.getmTime());
+		        	locationJson.put("mBearing", location.getmBearing());
 		        	locationJson.put("mLatitude", location.getmLatitude());
 		        	locationJson.put("mLongitude", location.getmLongitude());    
 		        	locationJson.put("snappedLatitude", location.getSnappedLatitude());
