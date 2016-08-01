@@ -1,6 +1,7 @@
 package gabriel.hibernate.dao;
 
 import gabriel.hibernate.entity.Ping;
+import gabriel.map.Osrm;
 import gabriel.hibernate.entity.Ping;
 import gabriel.utilities.HibernateUtil;
 import gabriel.utilities.SystemUtils;
@@ -16,8 +17,6 @@ import org.hibernate.Session;
 import org.hibernate.criterion.Projections;
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import gabirel.map.Osrm;
 
 public class PingDao {
 

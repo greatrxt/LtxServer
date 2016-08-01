@@ -21,32 +21,18 @@ public class Driver implements Serializable {
 	 * 
 	 */
 	private static final long serialVersionUID = -4399622404425985L;
-
-	@Id @GeneratedValue(strategy=GenerationType.IDENTITY)
-	@Column(name="id")
-	private long id;
-	
-	@Column(name="name")
-	private String name;
-	
-	@Column(name="username")
-	private String username;
-	
-	@Column(name="password")
-	private String password;
-	
-	@Column(name="contact_number")
-	private String contactNumber;
-	
-	@Column(name="image")
-	private byte[] image;
-	
-	@Column(name="date_of_joining")
-	private Date dateOfJoining;
-	
-	@Column(name="record_creation_time")
+	private long id;	
+	private String name;	
+	private String username;	
+	private String password;	
+	private String contactNumber;	
+	private byte[] image;	
+	private Date dateOfJoining;	
 	private Date recordCreationTime;
 
+	
+	@Id @GeneratedValue(strategy=GenerationType.IDENTITY)
+	@Column(name="id")
 	public long getId() {
 		return id;
 	}
@@ -54,7 +40,8 @@ public class Driver implements Serializable {
 	public void setId(long id) {
 		this.id = id;
 	}
-
+	
+	@Column(name="name")
 	public String getName() {
 		return name;
 	}
@@ -62,7 +49,8 @@ public class Driver implements Serializable {
 	public void setName(String name) {
 		this.name = name;
 	}
-
+	
+	@Column(name="username", unique=true)
 	public String getUsername() {
 		return username;
 	}
@@ -70,7 +58,8 @@ public class Driver implements Serializable {
 	public void setUsername(String username) {
 		this.username = username;
 	}
-
+	
+	@Column(name="password")
 	public String getPassword() {
 		return password;
 	}
@@ -78,7 +67,8 @@ public class Driver implements Serializable {
 	public void setPassword(String password) {
 		this.password = password;
 	}
-
+	
+	@Column(name="contact_number")
 	public String getContactNumber() {
 		return contactNumber;
 	}
@@ -86,7 +76,8 @@ public class Driver implements Serializable {
 	public void setContactNumber(String contactNumber) {
 		this.contactNumber = contactNumber;
 	}
-
+	
+	@Column(name="image")
 	public byte[] getImage() {
 		return image;
 	}

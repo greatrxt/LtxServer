@@ -7,6 +7,8 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -25,44 +27,21 @@ import javax.persistence.TemporalType;
 @Table(name = "trip")
 public class Trip {
 
-	@Id @GeneratedValue(strategy=GenerationType.IDENTITY)
-	@Column(name="id")
-	long id;
-	
-	@Column(name="trip_id")
-	private String tripId;	//Some UUID
-	
-	@Column(name="trip_date")
-	private Date tripDate;
-	
-	@Column(name="vehicle")
+	long id;	
+	private String tripId;	//Some UUID	
+	private Date tripDate;		//http://stackoverflow.com/questions/20466354/hibernate-map-a-foreign-key-that-points-to-unique-key
 	private Vehicle vehicle;
-	
-	@Column(name="driver")
-	private Driver driver;
-	
-	@Column(name="start_time")
-	private Date startTime;
-	
-	@Column(name="start_latitude")
+	private Driver driver;	
+	private Date startTime;	
 	private double startLatitude;
-	
-	@Column(name="start_longitude")
-	private double startLongitude;
-	
-	@Column(name="last_known_time")
-	private Date lastKnownTime;
-	
-	@Column(name="last_known_latitude")
-	private double lastKnownLatitude;
-	
-	@Column(name="last_known_longitude")
+	private double startLongitude;	
+	private Date lastKnownTime;	
+	private double lastKnownLatitude;	
 	private double lastKnownLongitude;
-
-	@Column(name="trip_over")
 	private boolean tripOver;
 	
-	
+	@Id @GeneratedValue(strategy=GenerationType.IDENTITY)
+	@Column(name="id")
 	public long getId() {
 		return id;
 	}
@@ -70,7 +49,8 @@ public class Trip {
 	public void setId(long id) {
 		this.id = id;
 	}
-
+	
+	@Column(name="trip_id")
 	public String getTripId() {
 		return tripId;
 	}
@@ -78,15 +58,19 @@ public class Trip {
 	public void setTripId(String tripId) {
 		this.tripId = tripId;
 	}
-
+	
+	//@Temporal(TemporalType.DATE) //truncates the time part in the date	
+	@Column(name="trip_date")
 	public Date getTripDate() {
 		return tripDate;
 	}
 
 	public void setTripDate(Date tripDate) {
 		this.tripDate = tripDate;
-	}
+	}	
+	
 
+	@JoinColumn(name="unique_id", nullable = false, referencedColumnName = "unique_id")
 	public Vehicle getVehicle() {
 		return vehicle;
 	}
@@ -94,7 +78,8 @@ public class Trip {
 	public void setVehicle(Vehicle vehicle) {
 		this.vehicle = vehicle;
 	}
-
+	
+	@JoinColumn(name="username", nullable = false, referencedColumnName = "username")
 	public Driver getDriver() {
 		return driver;
 	}
@@ -103,7 +88,6 @@ public class Trip {
 		this.driver = driver;
 	}
 
-	@Temporal(TemporalType.DATE)		//@Temporal: must be used with a java.util.Date field to specify the actual SQL type of the column
 	@Column(name="start_time")
 	public Date getStartTime() {
 		return startTime;
@@ -112,7 +96,8 @@ public class Trip {
 	public void setStartTime(Date startTime) {
 		this.startTime = startTime;
 	}
-
+	
+	@Column(name="start_latitude")
 	public double getStartLatitude() {
 		return startLatitude;
 	}
@@ -120,7 +105,8 @@ public class Trip {
 	public void setStartLatitude(double startLatitude) {
 		this.startLatitude = startLatitude;
 	}
-
+	
+	@Column(name="start_longitude")
 	public double getStartLongitude() {
 		return startLongitude;
 	}
@@ -129,16 +115,16 @@ public class Trip {
 		this.startLongitude = startLongitude;
 	}
 
+	@Column(name="last_known_time")
 	public Date getLastKnownTime() {
 		return lastKnownTime;
 	}
-
-	@Temporal(TemporalType.DATE)		//@Temporal: must be used with a java.util.Date field to specify the actual SQL type of the column
-	@Column(name="last_known_time")
+	
 	public void setLastKnownTime(Date lastKnownTime) {
 		this.lastKnownTime = lastKnownTime;
 	}
-
+	
+	@Column(name="last_known_latitude")
 	public double getLastKnownLatitude() {
 		return lastKnownLatitude;
 	}
@@ -146,7 +132,8 @@ public class Trip {
 	public void setLastKnownLatitude(double lastKnownLatitude) {
 		this.lastKnownLatitude = lastKnownLatitude;
 	}
-
+	
+	@Column(name="last_known_longitude")
 	public double getLastKnownLongitude() {
 		return lastKnownLongitude;
 	}
@@ -154,7 +141,8 @@ public class Trip {
 	public void setLastKnownLongitude(double lastKnownLongitude) {
 		this.lastKnownLongitude = lastKnownLongitude;
 	}
-
+	
+	@Column(name="trip_over")
 	public boolean isTripOver() {
 		return tripOver;
 	}

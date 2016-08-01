@@ -8,6 +8,12 @@ import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
 
+import gabriel.hibernate.entity.Driver;
+import gabriel.hibernate.entity.Location;
+import gabriel.hibernate.entity.Ping;
+import gabriel.hibernate.entity.Trip;
+import gabriel.hibernate.entity.Vehicle;
+
 
 public class HibernateUtil {
 
@@ -25,7 +31,11 @@ public class HibernateUtil {
         	
         	ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).build();
         	System.out.println("Hibernate Annotation serviceRegistry created");
-        	//configuration.addAnnotatedClass(Location.class);
+        	configuration.addAnnotatedClass(Location.class);
+        	configuration.addAnnotatedClass(Driver.class);
+        	configuration.addAnnotatedClass(Ping.class);
+        	configuration.addAnnotatedClass(Trip.class);
+        	configuration.addAnnotatedClass(Vehicle.class);
         	SessionFactory sessionFactory = configuration.buildSessionFactory(serviceRegistry);
         	
             return sessionFactory;

@@ -1,4 +1,4 @@
-package gabirel.map;
+package gabriel.map;
 
 import java.util.Timer;
 import java.util.TimerTask;

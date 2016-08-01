@@ -28,44 +28,22 @@ import javax.persistence.TemporalType;
 public class Location implements Serializable {
 	
 	private static final long serialVersionUID = -6668691617561812702L;
+	private long id;	
+	private double mLatitude;	
+	private double mLongitude;	
+	private double snappedLatitude;	
+	private double snappedLongitude;	
+	private double mAccuracy;	
+	private double mSpeed;	
+	private double mDistance;
+	private double mAltitude;
+	private Date mTime;		
+	private double mBearing;
+	private Date packetReceivedTime;
+	
 	
 	@Id @GeneratedValue(strategy=GenerationType.IDENTITY)
 	@Column(name="location_packet_id")
-	private long id;
-	
-	@Column(name="mLatitude")
-	private double mLatitude;
-	
-	@Column(name="mLongitude")
-	private double mLongitude;
-	
-	@Column(name="snappedLatitude")
-	private double snappedLatitude;
-	
-	@Column(name="snappedLongitude")
-	private double snappedLongitude;
-	
-	@Column(name="mAccuracy")
-	private double mAccuracy;
-	
-	@Column(name="mSpeed")
-	private double mSpeed;
-	
-	@Column(name="mDistance")
-	private double mDistance;
-	
-	@Column(name="mAltitude")
-	private double mAltitude;
-	
-	@Column(name="mTime")
-	private Date mTime;
-	
-	@Column(name="mBearing")
-	private double mBearing;
-	
-	@Column(name="packet_received_time")
-	private Date packetReceivedTime;
-
 	public long getId() {
 		return id;
 	}
@@ -73,7 +51,8 @@ public class Location implements Serializable {
 	public void setId(long id) {
 		this.id = id;
 	}
-
+	
+	@Column(name="mLatitude")
 	public double getmLatitude() {
 		return mLatitude;
 	}
@@ -81,7 +60,9 @@ public class Location implements Serializable {
 	public void setmLatitude(double mLatitude) {
 		this.mLatitude = mLatitude;
 	}
-
+	
+	
+	@Column(name="mLongitude")
 	public double getmLongitude() {
 		return mLongitude;
 	}
@@ -89,7 +70,8 @@ public class Location implements Serializable {
 	public void setmLongitude(double mLongitude) {
 		this.mLongitude = mLongitude;
 	}
-
+	
+	@Column(name="snappedLatitude")
 	public double getSnappedLatitude() {
 		return snappedLatitude;
 	}
@@ -97,7 +79,9 @@ public class Location implements Serializable {
 	public void setSnappedLatitude(double snappedLatitude) {
 		this.snappedLatitude = snappedLatitude;
 	}
-
+	
+	
+	@Column(name="snappedLongitude")
 	public double getSnappedLongitude() {
 		return snappedLongitude;
 	}
@@ -105,7 +89,8 @@ public class Location implements Serializable {
 	public void setSnappedLongitude(double snappedLongitude) {
 		this.snappedLongitude = snappedLongitude;
 	}
-
+	
+	@Column(name="mAccuracy")
 	public double getmAccuracy() {
 		return mAccuracy;
 	}
@@ -113,7 +98,8 @@ public class Location implements Serializable {
 	public void setmAccuracy(double mAccuracy) {
 		this.mAccuracy = mAccuracy;
 	}
-
+	
+	@Column(name="mSpeed")
 	public double getmSpeed() {
 		return mSpeed;
 	}
@@ -121,7 +107,8 @@ public class Location implements Serializable {
 	public void setmSpeed(double mSpeed) {
 		this.mSpeed = mSpeed;
 	}
-
+	
+	@Column(name="mDistance")
 	public double getmDistance() {
 		return mDistance;
 	}
@@ -129,7 +116,8 @@ public class Location implements Serializable {
 	public void setmDistance(double mDistance) {
 		this.mDistance = mDistance;
 	}
-
+	
+	@Column(name="mAltitude")
 	public double getmAltitude() {
 		return mAltitude;
 	}
@@ -138,7 +126,7 @@ public class Location implements Serializable {
 		this.mAltitude = mAltitude;
 	}
 
-	@Temporal(TemporalType.DATE)		//@Temporal: must be used with a java.util.Date field to specify the actual SQL type of the column
+	//@Temporal(TemporalType.DATE)		//@Temporal: must be used with a java.util.Date field to specify the actual SQL type of the column
 	@Column(name="mTime")
 	public Date getmTime() {
 		return mTime;
@@ -147,7 +135,8 @@ public class Location implements Serializable {
 	public void setmTime(Date mTime) {
 		this.mTime = mTime;
 	}
-
+	
+	@Column(name="mBearing")
 	public double getmBearing() {
 		return mBearing;
 	}
@@ -156,7 +145,7 @@ public class Location implements Serializable {
 		this.mBearing = mBearing;
 	}
 
-	@Temporal(TemporalType.DATE)		//@Temporal: must be used with a java.util.Date field to specify the actual SQL type of the column
+	//@Temporal(TemporalType.DATE)		//@Temporal: must be used with a java.util.Date field to specify the actual SQL type of the column
 	@Column(name="packet_received_time")
 	public Date getPacketReceivedTime() {
 		return packetReceivedTime;

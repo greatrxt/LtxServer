@@ -14,29 +14,18 @@ import javax.persistence.TemporalType;
 import javax.persistence.UniqueConstraint;
 
 @Entity
-@Table(name = "vehicle", uniqueConstraints = {@UniqueConstraint(columnNames = { "uniqueId" })})
+@Table(name = "vehicle", uniqueConstraints = {@UniqueConstraint(columnNames = { "unique_id" })})
 public class Vehicle implements Serializable  {
 
 	/**
 	 * 
 	 */
 	private static final long serialVersionUID = -3347253417572977303L;
-
-	@Id @GeneratedValue(strategy=GenerationType.IDENTITY)
-	@Column(name="id")
 	private long id;
-	
-	@Column(name="image")
 	private byte[] image;
-	
-	@Column(name="unique_id")
 	private String uniqueId;
-	
-	@Column(name="registration_number")
 	private String registrationNumber; 
-
-	@Column(name="vehicle_creation_time")
-	Date vehicleCreationTime;
+	private Date vehicleCreationTime;
 
 	@Temporal(TemporalType.DATE)		//@Temporal: must be used with a java.util.Date field to specify the actual SQL type of the column
 	@Column(name="vehicle_creation_time")
@@ -47,7 +36,9 @@ public class Vehicle implements Serializable  {
 	public void setVehicleCreationTime(Date vehicleCreationTime) {
 		this.vehicleCreationTime = vehicleCreationTime;
 	}
-
+	
+	@Id @GeneratedValue(strategy=GenerationType.IDENTITY)
+	@Column(name="id")
 	public long getId() {
 		return id;
 	}
@@ -55,7 +46,8 @@ public class Vehicle implements Serializable  {
 	public void setId(long id) {
 		this.id = id;
 	}
-
+	
+	@Column(name="image")
 	public byte[] getImage() {
 		return image;
 	}
@@ -63,7 +55,8 @@ public class Vehicle implements Serializable  {
 	public void setImage(byte[] image) {
 		this.image = image;
 	}
-
+	
+	@Column(name="unique_id")
 	public String getUniqueId() {
 		return uniqueId;
 	}
@@ -71,7 +64,8 @@ public class Vehicle implements Serializable  {
 	public void setUniqueId(String uniqueId) {
 		this.uniqueId = uniqueId;
 	}
-
+	
+	@Column(name="registration_number")
 	public String getRegistrationNumber() {
 		return registrationNumber;
 	}

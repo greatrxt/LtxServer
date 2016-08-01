@@ -27,6 +27,7 @@
 		<mapping class="gabriel.hibernate.entity.Ping"/>
 		<mapping class="gabriel.hibernate.entity.Driver"/>
 		<mapping class="gabriel.hibernate.entity.Vehicle"/>
+		<mapping class="gabriel.hibernate.entity.Trip"/>
         
     </session-factory>
 </hibernate-configuration>

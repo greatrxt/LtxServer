@@ -2,6 +2,7 @@ package gabriel.hibernate.dao;
 
 import gabriel.application.Application;
 import gabriel.hibernate.entity.Location;
+import gabriel.map.Osrm;
 import gabriel.utilities.HibernateUtil;
 import gabriel.utilities.SystemUtils;
 
@@ -13,6 +14,9 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
+import javax.persistence.Persistence;
+import javax.persistence.criteria.CriteriaQuery;
+
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.criterion.Order;
@@ -20,8 +24,7 @@ import org.hibernate.criterion.Projections;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import gabirel.map.Osrm;
-
+//http://docs.oracle.com/javaee/6/tutorial/doc/gjivm.html#gjivs
 public class LocationDao {
 
 	/**
@@ -97,6 +100,7 @@ public class LocationDao {
 		JSONArray locationArray = new JSONArray();
 		
 		Session session = HibernateUtil.getSessionAnnotationFactory().openSession();
+		
 		try {
 			session.beginTransaction();
 			Criteria count = session.createCriteria(Location.class);
@@ -112,6 +116,8 @@ public class LocationDao {
 
 	        List<Location> list = criteria.list();
 	        Iterator<Location> locations = list.iterator();
+			
+			//CriteriaQuery<Object> select = Persistence.createEntityManagerFactory("").createEntityManager().getCriteriaBuilder().createQuery();
 	       
 	        while(locations.hasNext()){
 	        	Location location = locations.next();
@@ -124,8 +130,16 @@ public class LocationDao {
 		        	locationJson.put("mBearing", location.getmBearing());
 		        	locationJson.put("mLatitude", location.getmLatitude());
 		        	locationJson.put("mLongitude", location.getmLongitude());    
-		        	locationJson.put("snappedLatitude", location.getSnappedLatitude());
-		        	locationJson.put("snappedLongitude", location.getSnappedLongitude());  
+		        	
+		        	double snappedLatitude = location.getSnappedLatitude();
+		        	double snappedLongitude = location.getSnappedLongitude();
+		        	
+		        	if(snappedLatitude != Osrm.STATUS_SNAP_FAILED && snappedLongitude!=Osrm.STATUS_SNAP_FAILED){
+			        	locationJson.put("snappedLatitude", location.getSnappedLatitude());
+			        	locationJson.put("snappedLongitude", location.getSnappedLongitude());  
+		        	} else {
+		        		Osrm.snapLocation(location.getId());
+		        	}
 		        	locationArray.put(locationJson);
 		        	
 	        	}

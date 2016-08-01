@@ -66,7 +66,7 @@ public class VehicleDao {
 			
 			Criteria criteria = session.createCriteria(Vehicle.class);
 			Disjunction or = Restrictions.disjunction();
-			or.add(Restrictions.ilike("uniqueId", query));
+			or.add(Restrictions.ilike("unique_id", query));
 			or.add(Restrictions.ilike("registration_number", query));
 			criteria.add(or);
 			
@@ -114,11 +114,12 @@ public class VehicleDao {
 			if(list.size() <= 1){
 				if(list.size() == 0){
 					//No user found
-					vehicleInfo.put(Application.ERROR, "No vehicle with uniqueId - " + uniqueId + " found");
+					vehicleInfo.put(Application.ERROR, "No vehicle with uniqueId " + uniqueId + " found");
 				} else {
 					Iterator<Vehicle> vehicleList = list.iterator();
 					Vehicle vehicle = vehicleList.next();
 					vehicleInfo.put("registrationNumber", vehicle.getRegistrationNumber());
+					vehicleInfo.put("uniqueId", vehicle.getUniqueId());
 					//vehicleInfo.put("vehicleCreationTime", vehicle.getVehicleCreationTime());
 					vehicleInfo.put("image", Base64.getEncoder().encodeToString(vehicle.getImage()));
 				}

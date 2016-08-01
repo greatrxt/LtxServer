@@ -17,35 +17,18 @@ import javax.persistence.TemporalType;
 public class Ping implements Serializable {
 
 	private static final long serialVersionUID = -856136193900710764L;
+	private long id;	
+	private double mLatitude;	
+	private double mLongitude;
+	private double snappedLatitude;
+	private double snappedLongitude;
+	private double lastKnownLocationAccuracy;
+	private double batteryCharge;
+	private Date packetCreatedTime;
+	private Date packetReceivedTime;
 
 	@Id @GeneratedValue(strategy=GenerationType.IDENTITY)
 	@Column(name="ping_packet_id")
-	private long id;
-	
-	@Column(name="lastKnownLatitude")
-	private double mLatitude;
-	
-	@Column(name="lastKnownSnappedLongitude")
-	private double mLongitude;
-	
-	@Column(name="lastKnownSnappedLatitude")
-	private double snappedLatitude;
-	
-	@Column(name="lastKnownLongitude")
-	private double snappedLongitude;
-	
-	@Column(name="lastKnownLocationAccuracy")
-	private double lastKnownLocationAccuracy;
-	
-	@Column(name="battery_charge")
-	private double batteryCharge;
-	
-	@Column(name="packet_created_time")
-	private Date packetCreatedTime;
-	
-	@Column(name="packet_received_time")
-	private Date packetReceivedTime;
-
 	public long getId() {
 		return id;
 	}
@@ -53,7 +36,8 @@ public class Ping implements Serializable {
 	public void setId(long id) {
 		this.id = id;
 	}
-
+	
+	@Column(name="lastKnownLatitude")
 	public double getmLatitude() {
 		return mLatitude;
 	}
@@ -61,7 +45,8 @@ public class Ping implements Serializable {
 	public void setmLatitude(double mLatitude) {
 		this.mLatitude = mLatitude;
 	}
-
+	
+	@Column(name="lastKnownLongitude")
 	public double getmLongitude() {
 		return mLongitude;
 	}
@@ -69,7 +54,8 @@ public class Ping implements Serializable {
 	public void setmLongitude(double mLongitude) {
 		this.mLongitude = mLongitude;
 	}
-
+	
+	@Column(name="lastKnownSnappedLatitude")
 	public double getSnappedLatitude() {
 		return snappedLatitude;
 	}
@@ -78,6 +64,7 @@ public class Ping implements Serializable {
 		this.snappedLatitude = snappedLatitude;
 	}
 
+	@Column(name="lastKnownSnappedLongitude")
 	public double getSnappedLongitude() {
 		return snappedLongitude;
 	}
@@ -85,7 +72,8 @@ public class Ping implements Serializable {
 	public void setSnappedLongitude(double snappedLongitude) {
 		this.snappedLongitude = snappedLongitude;
 	}
-
+	
+	@Column(name="lastKnownLocationAccuracy")
 	public double getLastKnownLocationAccuracy() {
 		return lastKnownLocationAccuracy;
 	}
@@ -93,7 +81,8 @@ public class Ping implements Serializable {
 	public void setLastKnownLocationAccuracy(double lastKnownLocationAccuracy) {
 		this.lastKnownLocationAccuracy = lastKnownLocationAccuracy;
 	}
-
+	
+	@Column(name="battery_charge")
 	public double getBatteryCharge() {
 		return batteryCharge;
 	}
@@ -102,7 +91,7 @@ public class Ping implements Serializable {
 		this.batteryCharge = batteryCharge;
 	}
 
-	@Temporal(TemporalType.DATE)		//@Temporal: must be used with a java.util.Date field to specify the actual SQL type of the column
+	//@Temporal(TemporalType.DATE)		//@Temporal: must be used with a java.util.Date field to specify the actual SQL type of the column
 	@Column(name="packet_created_time")
 	public Date getPacketCreatedTime() {
 		return packetCreatedTime;
@@ -112,7 +101,7 @@ public class Ping implements Serializable {
 		this.packetCreatedTime = packetCreatedTime;
 	}
 	
-	@Temporal(TemporalType.DATE)		//@Temporal: must be used with a java.util.Date field to specify the actual SQL type of the column
+	//@Temporal(TemporalType.DATE)		//@Temporal: must be used with a java.util.Date field to specify the actual SQL type of the column
 	@Column(name="packet_received_time")
 	public Date getPacketReceivedTime() {
 		return packetReceivedTime;
