@@ -32,9 +32,12 @@ public class Osrm {
 	//	new TimerTask() {
 			@Override
 			public void run() {
-				Session session = HibernateUtil.getSessionAnnotationFactory().openSession();
-				session.beginTransaction();
+				addToQueue(recordId);
+				/*
+				Session session = null;
 				try {
+					session = HibernateUtil.getSessionAnnotationFactory().openSession();
+					session.beginTransaction();
 				
 					Location location = (Location) session.get(Location.class, recordId);
 					location.setSnappedLatitude(STATUS_SNAP_FAILED);
@@ -66,14 +69,66 @@ public class Osrm {
 				} catch(Exception e){
 					e.printStackTrace();
 				} finally {
-					session.getTransaction().commit();	// commit in finally to save STATUS_SNAP_FAILED in case of error
-					session.close();
+					if(session!=null){
+						session.getTransaction().commit();	// commit in finally to save STATUS_SNAP_FAILED in case of error
+						session.close();
+						System.out.println("OSRM CLOSING SESSION");
+					}
 				}
-			}
+			*/}
 		}).start();
 		//}, 2000);
 	}
 	
+	/**
+	 * 
+	 * @param recordId
+	 */
+	public synchronized static void addToQueue(long recordId){
+
+			Session session = null;
+			try {
+				session = HibernateUtil.getSessionAnnotationFactory().openSession();
+				session.beginTransaction();
+			
+				Location location = (Location) session.get(Location.class, recordId);
+				location.setSnappedLatitude(STATUS_SNAP_FAILED);
+				location.setSnappedLongitude(STATUS_SNAP_FAILED);
+				session.update(location);
+				
+				double rawLatitude = location.getmLatitude();
+				double rawLongitude = location.getmLongitude();
+				System.out.print("Snapping "+recordId+" - "+rawLatitude+", "+rawLongitude);
+				if(rawLatitude > 0 && rawLongitude > 0){
+					String url = OSRM_URL + rawLongitude +","+rawLatitude;
+					String response = HttpUtils.doGetToFetchString(url);
+				
+					JSONObject responseJson = new JSONObject(response);
+					JSONArray wayPointsArray = responseJson.getJSONArray(JSON_LABEL_WAYPOINTS);
+					
+					if(wayPointsArray.length() > 0){
+						JSONObject wayPoint = wayPointsArray.getJSONObject(0);
+						JSONArray locationArray = wayPoint.getJSONArray(JSON_LABEL_LOCATION);
+						double snappedLatitude = locationArray.getDouble(1);
+						double snappedLongitude = locationArray.getDouble(0);
+						location.setSnappedLatitude(snappedLatitude);
+						location.setSnappedLongitude(snappedLongitude);
+						session.update(location);
+						System.out.println(" to "+snappedLatitude+", "+snappedLongitude);
+					}
+				}
+				
+			} catch(Exception e){
+				e.printStackTrace();
+			} finally {
+				if(session!=null){
+					session.getTransaction().commit();	// commit in finally to save STATUS_SNAP_FAILED in case of error
+					session.close();
+					System.out.println("OSRM CLOSING SESSION");
+				}
+			}
+			
+	}
 	/**
 	 * Adds snapped lat lon to ping table
 	 */

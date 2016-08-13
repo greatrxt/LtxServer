@@ -22,7 +22,7 @@ public class Vehicle implements Serializable  {
 	 */
 	private static final long serialVersionUID = -3347253417572977303L;
 	private long id;
-	private byte[] image;
+	private String image;
 	private String uniqueId;
 	private String registrationNumber; 
 	private Date vehicleCreationTime;
@@ -48,11 +48,11 @@ public class Vehicle implements Serializable  {
 	}
 	
 	@Column(name="image")
-	public byte[] getImage() {
+	public String getImage() {
 		return image;
 	}
 
-	public void setImage(byte[] image) {
+	public void setImage(String image) {
 		this.image = image;
 	}
 	

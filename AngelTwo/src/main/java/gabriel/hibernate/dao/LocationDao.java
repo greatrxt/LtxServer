@@ -48,9 +48,10 @@ public class LocationDao {
 									long mTime, 
 									double mBearing){
 		
-		Session session = HibernateUtil.getSessionAnnotationFactory().openSession();
 		long saveId = -1;
+		Session session = null;
 		try {
+			session = HibernateUtil.getSessionAnnotationFactory().openSession();
 			session.beginTransaction();
 			Location location = new Location();
 			location.setmAccuracy(mAccuracy);
@@ -81,7 +82,9 @@ public class LocationDao {
 			e.printStackTrace();
 			return e.getMessage();
 		} finally {
-			session.close();
+			if(session!=null){
+				session.close();
+			}
 			if(saveId!=-1){
 				Osrm.snapLocation(saveId);
 			}
@@ -99,9 +102,9 @@ public class LocationDao {
 		
 		JSONArray locationArray = new JSONArray();
 		
-		Session session = HibernateUtil.getSessionAnnotationFactory().openSession();
-		
+		Session session = null;
 		try {
+			session = HibernateUtil.getSessionAnnotationFactory().openSession();
 			session.beginTransaction();
 			Criteria count = session.createCriteria(Location.class);
 	        count.setProjection(Projections.rowCount());
@@ -138,7 +141,7 @@ public class LocationDao {
 			        	locationJson.put("snappedLatitude", location.getSnappedLatitude());
 			        	locationJson.put("snappedLongitude", location.getSnappedLongitude());  
 		        	} else {
-		        		Osrm.snapLocation(location.getId());
+		        		//Osrm.snapLocation(location.getId());
 		        	}
 		        	locationArray.put(locationJson);
 		        	
@@ -146,7 +149,9 @@ public class LocationDao {
 	        }
 	        return locationArray;
 		} finally {
-			session.close();
+			if(session!=null){
+				session.close();
+			}
 		}
 	}
 	

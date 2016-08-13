@@ -30,9 +30,9 @@ public class PingDao {
 	 * @return
 	 */
 	public static boolean storePingPacket(double mLatitude, double mLongitude, double lastKnownLocationAccuracy, double batteryCharge, long packetCreatedTime){
-		Session session = HibernateUtil.getSessionAnnotationFactory().openSession();
-		
+		Session session = null;
 		try {
+			session = HibernateUtil.getSessionAnnotationFactory().openSession();
 			session.beginTransaction();
 			Ping ping = new Ping();
 			ping.setmLatitude(mLatitude);
@@ -56,7 +56,9 @@ public class PingDao {
 		} catch(Exception e){
 			e.printStackTrace();
 		} finally {
-			session.close();
+			if(session!=null){
+				session.close();
+			}
 		}
 		return false;
 	}
@@ -70,8 +72,9 @@ public class PingDao {
 		
 		JSONArray pingArray = new JSONArray();
 		
-		Session session = HibernateUtil.getSessionAnnotationFactory().openSession();
+		Session session = null;
 		try {
+			session = HibernateUtil.getSessionAnnotationFactory().openSession();
 			session.beginTransaction();
 			Criteria count = session.createCriteria(Ping.class);
 	        count.setProjection(Projections.rowCount());
@@ -100,7 +103,9 @@ public class PingDao {
 	        }
 	        return pingArray;
 		} finally {
-			session.close();
+			if(session!=null){
+				session.close();
+			}
 		}
 	}
 }

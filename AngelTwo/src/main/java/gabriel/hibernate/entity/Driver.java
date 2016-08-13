@@ -26,7 +26,7 @@ public class Driver implements Serializable {
 	private String username;	
 	private String password;	
 	private String contactNumber;	
-	private byte[] image;	
+	private String image; //image as base64 String	
 	private Date dateOfJoining;	
 	private Date recordCreationTime;
 
@@ -77,12 +77,12 @@ public class Driver implements Serializable {
 		this.contactNumber = contactNumber;
 	}
 	
-	@Column(name="image")
-	public byte[] getImage() {
+	@Column(name="image", columnDefinition="TEXT")
+	public String getImage() {
 		return image;
 	}
 
-	public void setImage(byte[] image) {
+	public void setImage(String image) {
 		this.image = image;
 	}
 	

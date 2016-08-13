@@ -1,6 +1,5 @@
 package gabriel.hibernate.dao;
 
-import java.util.Base64;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
@@ -28,12 +27,11 @@ public class VehicleDao {
 	 * @param image
 	 * @return
 	 */
-	public static String storeVehicleInfo(String uniqueId, byte[] image, String registrationNumber){
-		
-		Session session = HibernateUtil.getSessionAnnotationFactory().openSession();
-		
-		try {		
-			session.beginTransaction();
+	public static JSONObject storeVehicleInfo(String uniqueId, String image, String registrationNumber){
+		JSONObject result = new JSONObject();
+		Session session = null;
+		try {
+			session = HibernateUtil.getSessionAnnotationFactory().openSession();
 			
 			Vehicle vehicle = new Vehicle();
 			vehicle.setUniqueId(uniqueId);
@@ -42,15 +40,18 @@ public class VehicleDao {
 			vehicle.setVehicleCreationTime(new Date());			
 			session.save(vehicle);		
 			session.getTransaction().commit();
-			
+			result.put(Application.RESULT, Application.SUCCESS);
 		} catch(Exception e){
 			e.printStackTrace();
-			return e.getMessage();
+			result.put(Application.RESULT, Application.ERROR);
+			result.put(Application.ERROR_MESSAGE, e.getMessage());
 		} finally {
-			session.close();
+			if(session!=null){
+				session.close();
+			}
 		}
 		
-		return Application.SUCCESS;
+		return result;
 	}
 
 	/**
@@ -60,8 +61,9 @@ public class VehicleDao {
 	 */
 	public static JSONObject searchVehiclesFor(String query){
 		JSONObject result = new JSONObject();
-		Session session = HibernateUtil.getSessionAnnotationFactory().openSession();
+		Session session = null;
 		try {
+			session = HibernateUtil.getSessionAnnotationFactory().openSession();
 			session.beginTransaction();
 			
 			Criteria criteria = session.createCriteria(Vehicle.class);
@@ -87,9 +89,12 @@ public class VehicleDao {
 			}
 		} catch(Exception e){
 			e.printStackTrace();
-			result.put(Application.ERROR, e.getMessage());
+			result.put(Application.RESULT, Application.ERROR);
+			result.put(Application.ERROR_MESSAGE, e.getMessage());
 		} finally {
-			session.close();
+			if(session!=null){
+				session.close();
+			}
 		}
 		
 		return result;
@@ -103,9 +108,9 @@ public class VehicleDao {
 	public static JSONObject getVehicleInfo(String uniqueId){
 	
 		JSONObject vehicleInfo = new JSONObject();
-		Session session = HibernateUtil.getSessionAnnotationFactory().openSession();
+		Session session = null;
 		try {
-			session.beginTransaction();
+			session = HibernateUtil.getSessionAnnotationFactory().openSession();
 			
 			Criteria criteria = session.createCriteria(Vehicle.class);
 			criteria.add(Restrictions.eq("uniqueId", uniqueId));
@@ -121,7 +126,7 @@ public class VehicleDao {
 					vehicleInfo.put("registrationNumber", vehicle.getRegistrationNumber());
 					vehicleInfo.put("uniqueId", vehicle.getUniqueId());
 					//vehicleInfo.put("vehicleCreationTime", vehicle.getVehicleCreationTime());
-					vehicleInfo.put("image", Base64.getEncoder().encodeToString(vehicle.getImage()));
+					vehicleInfo.put("image", vehicle.getImage());
 				}
 			} else {
 				//LOG ERROR HERE ONCE LOGGER IS INTEGRATED
@@ -129,9 +134,12 @@ public class VehicleDao {
 			}
 		} catch(Exception e){
 			e.printStackTrace();
+			vehicleInfo.put(Application.RESULT, Application.ERROR);
 			vehicleInfo.put(Application.ERROR, e.getMessage());
 		} finally {
-			session.close();
+			if(session!=null){
+				session.close();
+			}
 		}
 		
 		return vehicleInfo;

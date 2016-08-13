@@ -13,6 +13,7 @@ import org.hibernate.Session;
 import org.hibernate.criterion.Conjunction;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.metadata.ClassMetadata;
+import org.json.JSONObject;
 
 import gabriel.application.Application;
 import gabriel.hibernate.entity.Driver;
@@ -41,11 +42,14 @@ public class TripDao {
 	 */
 	//http://stackoverflow.com/questions/1787086/hibernate-query-a-foreign-key-field-with-id
 	//http://stackoverflow.com/questions/18053712/hibernate-criteria-filter-by-foreign-key
-	public static String saveTripData(String vehicleUniqueId, String driverUsername, Date recordDate, double latitude, double longitude){
+	public static JSONObject saveTripData(String vehicleUniqueId, String driverUsername, Date recordDate, double latitude, double longitude){
 		
-		Session session = HibernateUtil.getSessionAnnotationFactory().openSession();
+		JSONObject result = new JSONObject();
+		Session session = null;
 		
 		try {
+			
+			session = HibernateUtil.getSessionAnnotationFactory().openSession();
 		
 			session.beginTransaction();
 			Criteria criteria = session.createCriteria(Trip.class);
@@ -89,28 +93,40 @@ public class TripDao {
 			if(trips.size() == 0){
 				endAllEarlierTripsForVehicle(vehicleUniqueId);
 				createTrip(vehicleUniqueId, driverUsername, recordDate, latitude, longitude);
+				result.put(Application.RESULT, Application.SUCCESS);
 			} else if (trips.size() == 1){
 				Iterator<Trip> tripIterator = trips.iterator();
 				Trip trip = tripIterator.next();
 				updateTrip(trip, recordDate, latitude, longitude);
+				result.put(Application.RESULT, Application.SUCCESS);
 			} else {
 				//size > 1. Something wrong !
 				System.out.println("ERROR ! MORE THAN 1 TRIP FOR VEHICLE - "+vehicleUniqueId+" FOUND");
+				result.put(Application.RESULT, Application.ERROR);
+				result.put(Application.ERROR_MESSAGE, "More than 1 trip for vehicle "+vehicleUniqueId+" found");
 			}
 		} catch(Exception e){
 			e.printStackTrace();
-			return e.getMessage();
+			result.put(Application.RESULT, Application.ERROR);
+			result.put(Application.ERROR_MESSAGE, e.getMessage());
 		} finally {
-			session.close();
+			if(session!=null){
+				session.close();
+			}
 		}
 		
-		return Application.SUCCESS;
+		return result;
 	}
 
+	/**
+	 * 
+	 * @param vehicleUniqueId
+	 */
 	private static void endAllEarlierTripsForVehicle(String vehicleUniqueId) {
 		System.out.println("Ending all earlier trips for "+vehicleUniqueId);
-		Session session = HibernateUtil.getSessionAnnotationFactory().openSession();
+		Session session = null;
 		try {
+			session = HibernateUtil.getSessionAnnotationFactory().openSession();
 			session.beginTransaction();
 			
 			Criteria criteria = session.createCriteria(Trip.class);
@@ -124,7 +140,9 @@ public class TripDao {
 		} catch(Exception e){
 			e.printStackTrace();
 		} finally {
-			session.close();
+			if(session!=null){
+				session.close();
+			}
 		}
 	}
 
@@ -137,8 +155,9 @@ public class TripDao {
 	 */
 	private static void updateTrip(Trip trip, Date recordDate, double latitude, double longitude) {
 		System.out.println("Updating trip");
-		Session session = HibernateUtil.getSessionAnnotationFactory().openSession();
+		Session session = null;
 		try {
+			session = HibernateUtil.getSessionAnnotationFactory().openSession();
 			session.beginTransaction();
 			trip.setLastKnownLatitude(latitude);
 			trip.setLastKnownLongitude(longitude);
@@ -148,7 +167,9 @@ public class TripDao {
 		} catch(Exception e){
 			e.printStackTrace();
 		} finally {
-			session.close();
+			if(session!=null){
+				session.close();
+			}
 		}
 	}
 
@@ -163,8 +184,9 @@ public class TripDao {
 	private static void createTrip(String vehicleUniqueId, String driverUsername, Date recordDate, double latitude,
 			double longitude) {
 		System.out.println("Creating trip");
-		Session session = HibernateUtil.getSessionAnnotationFactory().openSession();
+		Session session = null;
 		try {
+			session = HibernateUtil.getSessionAnnotationFactory().openSession();
 			session.beginTransaction();
 			
 			Criteria criteriaForVehicle = session.createCriteria(Vehicle.class);
@@ -214,7 +236,9 @@ public class TripDao {
 		} catch(Exception e){
 			e.printStackTrace();
 		} finally {
-			session.close();
+			if(session!=null){
+				session.close();
+			}
 		}
 	}
 	

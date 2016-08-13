@@ -1,6 +1,8 @@
 package gabriel.utilities;
 
+import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -10,6 +12,9 @@ import java.io.OutputStream;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
+import javax.imageio.ImageIO;
+
 import org.json.JSONObject;
 
 public class SystemUtils {
@@ -29,9 +34,12 @@ public class SystemUtils {
 			byte[] bytes = new byte[1024];
 
 			out = new FileOutputStream(new File(uploadedFileLocation));
+			int size = 0;
 			while ((read = uploadedInputStream.read(bytes)) != -1) {
 				out.write(bytes, 0, read);
+				size+=read;
 			}
+			System.out.println("Wrote "+ size+" bytes");
 			out.flush();
 			out.close();
 		} catch (IOException e) {
@@ -40,7 +48,39 @@ public class SystemUtils {
 		}
 
 	}
+/*	
+	public static void writeImageToFile(InputStream uploadedInputStream,
+			String uploadedFileLocation){
+		try {
+			BufferedImage bufferedImage = ImageIO.read(uploadedInputStream);
+			ImageIO.write(bufferedImage, "jpg", new File(uploadedFileLocation));
+			
+			byte[] bytes = convertInputStreamToByteArray(uploadedInputStream);
+			System.out.println("Data size -- >"+bytes.length);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+	}*/
 
+	/**
+	 * 
+	 * @param is
+	 * @return
+	 * @throws IOException
+	 */
+	public static byte[] convertInputStreamToByteArray(InputStream is) throws IOException{
+		ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+
+		int nRead;
+		byte[] data = new byte[16384];
+
+		while ((nRead = is.read(data, 0, data.length)) != -1) {
+		  buffer.write(data, 0, nRead);
+		}
+		buffer.flush();
+		return buffer.toByteArray();
+	}
 	/**
 	 * 
 	 * @param is
@@ -56,10 +96,33 @@ public class SystemUtils {
 			while ((inputStr = streamReader.readLine()) != null)
 			    responseStrBuilder.append(inputStr);
 			
-			System.out.println(responseStrBuilder.toString());
+			System.out.println("--------------Received JSON------------ \n\n\n"+responseStrBuilder.toString()+"\n\n-------------------------\n\n");
 			return new JSONObject(responseStrBuilder.toString().trim());
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		return null;
+	}
+	
+	
+	/**
+	 * 
+	 * @param is
+	 * @return
+	 */
+	public static String convertInputStreamToString(InputStream is){
+		BufferedReader streamReader;
+		try {
+			streamReader = new BufferedReader(new InputStreamReader(is, "UTF-8"));
+			StringBuilder responseStrBuilder = new StringBuilder();
+
+			String inputStr;
+			while ((inputStr = streamReader.readLine()) != null)
+			    responseStrBuilder.append(inputStr);
+			
+			System.out.println("--------------Received------------ \n\n\n"+responseStrBuilder.toString()+"\n\n-------------------------\n\n");
+			return responseStrBuilder.toString().trim();
+		} catch (IOException e) {
 			e.printStackTrace();
 		} 
 		return null;
