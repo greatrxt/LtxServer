@@ -16,6 +16,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import gabriel.application.Application;
@@ -95,6 +96,55 @@ public class VehicleService {
 		
 	}
 	
+	@Produces(MediaType.APPLICATION_JSON)
+	@GET
+	public static Response getAllVehicles(@Context ServletContext context){
+		
+		JSONObject result = null;
+		
+		try {
+			result = VehicleDao.getAllVehicles();
+			
+			if(!result.get("result").toString().trim().equals(Application.ERROR)){
+				//Create a copy of image on server that can be accessed from the web client
+				String contextPath = context.getContextPath();
+				String contextRealPath = context.getRealPath(contextPath);
+				System.out.println(context.getRealPath(contextRealPath));
+				String imagePath = contextRealPath + File.separator + Application.FOLDER_UPLOADS + File.separator + Application.FOLDER_DRIVER_IMAGES; 
+				File imageUploadFolder = new File(imagePath);
+				
+				if(!imageUploadFolder.exists()){
+					System.out.println("Creating image folder");
+					imageUploadFolder.mkdirs();
+				}
+				
+				JSONArray driverArray = result.getJSONArray("result");
+				for(int d = 0; d < driverArray.length(); d++){
+					JSONObject driver = driverArray.getJSONObject(d);
+					String image = Application.STANDARD_IMAGE_NOT_FOUND;
+					if(driver.has("image")){
+						if(!driver.getString("image").isEmpty()){
+							image = driver.getString("image");
+						}
+					}
+					
+					byte[] imageBytes = javax.xml.bind.DatatypeConverter.parseBase64Binary(image);
+					BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(imageBytes));
+					File imageFile = new File(imageUploadFolder.getAbsolutePath() + File.separator + driver.getString("username") + ".png");
+					ImageIO.write(bufferedImage, "png", imageFile);
+				}	
+			}
+			
+			return Response.status(200).entity(result.toString()).build();
+			
+		} catch(Exception e){
+			e.printStackTrace();
+			result = new JSONObject();
+			result.put(Application.RESULT, Application.ERROR);
+			result.put(Application.ERROR_MESSAGE, e.getMessage());
+			return Response.status(500).entity(result.toString()).build();
+		}	
+	}
 	
 	@Path("/info/{id}")
 	@Produces(MediaType.APPLICATION_JSON)

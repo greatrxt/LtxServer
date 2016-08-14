@@ -180,6 +180,7 @@ public class DriverDao {
 		JSONObject result = new JSONObject();
 		Session session = null;
 		try {
+			
 			session = HibernateUtil.getSessionAnnotationFactory().openSession();
 			session.beginTransaction();
 			
@@ -195,12 +196,16 @@ public class DriverDao {
 				} else {
 					Iterator<Driver> driverList = list.iterator();
 					Driver driver = driverList.next();
-					result.put("name", driver.getName());
-					result.put("username", driver.getUsername());
-					result.put("contactNumber", driver.getContactNumber());
-					result.put("recordCreationTime", driver.getRecordCreationTime());
-					result.put("dateOfJoining", driver.getDateOfJoining());
-					result.put("image", driver.getImage());
+					JSONObject driverJson = new JSONObject();
+					driverJson.put("name", driver.getName());
+					driverJson.put("username", driver.getUsername());
+					driverJson.put("contactNumber", driver.getContactNumber());
+					driverJson.put("recordCreationTime", driver.getRecordCreationTime());
+					driverJson.put("dateOfJoining", driver.getDateOfJoining());
+					driverJson.put("image", driver.getImage());
+					JSONArray driverArray = new JSONArray();
+					driverArray.put(driverJson);
+					result.put(Application.RESULT, driverArray);
 				}
 			} else {
 				//LOG ERROR HERE ONCE LOGGER IS INTEGRATED
@@ -208,6 +213,7 @@ public class DriverDao {
 				result.put(Application.RESULT, Application.ERROR);
 				result.put(Application.ERROR_MESSAGE, "More than 1 user with Username - " + username + " found");
 			}
+			
 		} catch(Exception e){
 			e.printStackTrace();
 			result = new JSONObject();

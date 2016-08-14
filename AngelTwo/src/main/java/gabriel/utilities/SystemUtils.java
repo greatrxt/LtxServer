@@ -2,6 +2,7 @@ package gabriel.utilities;
 
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -14,8 +15,12 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 import javax.imageio.ImageIO;
+import javax.servlet.ServletContext;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
+
+import gabriel.application.Application;
 
 public class SystemUtils {
 	
@@ -142,5 +147,45 @@ public class SystemUtils {
         //format.setTimeZone(TimeZone.getTimeZone("Australia/Sydney"));
         //formatted = format.format(date);
         return formatted;
+	}
+
+	/**
+	 * Creates image in driver folder
+	 * @param context
+	 * @param result
+	 * @throws IOException
+	 */
+	public static void createDriverImageInTempCache(ServletContext context, JSONObject result) throws IOException {
+		if(!result.get("result").toString().trim().equals(Application.ERROR)){
+			//Create a copy of image on server that can be accessed from the web client
+			String contextPath = context.getContextPath();
+			String contextRealPath = context.getRealPath(contextPath);
+			System.out.println(context.getRealPath(contextRealPath));
+			String imagePath = contextRealPath + File.separator + Application.FOLDER_UPLOADS + File.separator + Application.FOLDER_DRIVER_IMAGES; 
+			File imageUploadFolder = new File(imagePath);
+			
+			if(!imageUploadFolder.exists()){
+				System.out.println("Creating image folder");
+				imageUploadFolder.mkdirs();
+			}
+			
+			JSONArray driverArray = result.getJSONArray("result");
+			for(int d = 0; d < driverArray.length(); d++){
+				JSONObject driver = driverArray.getJSONObject(d);
+				String image = Application.STANDARD_IMAGE_NOT_FOUND;
+				if(driver.has("image")){
+					if(!driver.getString("image").isEmpty()){
+						image = driver.getString("image");
+						driver.remove("image");	//remove image. 
+					}
+				}
+				
+				byte[] imageBytes = javax.xml.bind.DatatypeConverter.parseBase64Binary(image);
+				BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(imageBytes));
+				File imageFile = new File(imageUploadFolder.getAbsolutePath() + File.separator + driver.getString("username") + ".png");
+				ImageIO.write(bufferedImage, "png", imageFile);
+			}	
+		}
+		
 	}
 }

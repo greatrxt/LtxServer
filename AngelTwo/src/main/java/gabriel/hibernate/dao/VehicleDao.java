@@ -101,7 +101,7 @@ public class VehicleDao {
 	}
 	
 	/**
-	 * Fetch user with particular uniqueId from DB
+	 * Fetch vehicle with particular uniqueId from DB
 	 * @param uniqueId
 	 * @return
 	 */
@@ -143,5 +143,50 @@ public class VehicleDao {
 		}
 		
 		return vehicleInfo;
+	}
+	
+	/**
+	 * Fetch all vehicles fromDB
+	 * @param uniqueId
+	 * @return
+	 */
+	public static JSONObject getAllVehicles(){
+	
+		JSONObject vehiclesInfo = new JSONObject();
+		Session session = null;
+		try {
+			session = HibernateUtil.getSessionAnnotationFactory().openSession();
+			
+			Criteria criteria = session.createCriteria(Vehicle.class);
+			List<Vehicle> list = criteria.list();
+			
+				if(list.size() == 0){
+					//No vehicle found
+					vehiclesInfo.put(Application.RESULT, Application.ERROR);
+					vehiclesInfo.put(Application.ERROR_MESSAGE, "No vehicle found");
+				} else {
+					Iterator<Vehicle> vehicleList = list.iterator();
+					JSONArray vehiclesArray = new JSONArray();
+					while(vehicleList.hasNext()){
+						Vehicle vehicle = vehicleList.next();
+						JSONObject vehicleJson = new JSONObject();
+						vehicleJson.put("registrationNumber", vehicle.getRegistrationNumber());
+						vehicleJson.put("uniqueId", vehicle.getUniqueId());
+						//vehicleInfo.put("vehicleCreationTime", vehicle.getVehicleCreationTime());
+						vehicleJson.put("image", vehicle.getImage());
+						vehiclesArray.put(vehicleJson);
+					}
+				}
+		} catch(Exception e){
+			e.printStackTrace();
+			vehiclesInfo.put(Application.RESULT, Application.ERROR);
+			vehiclesInfo.put(Application.ERROR, e.getMessage());
+		} finally {
+			if(session!=null){
+				session.close();
+			}
+		}
+		
+		return vehiclesInfo;
 	}
 }
