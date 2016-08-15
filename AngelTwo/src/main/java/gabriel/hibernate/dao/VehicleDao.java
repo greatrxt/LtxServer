@@ -32,6 +32,7 @@ public class VehicleDao {
 		Session session = null;
 		try {
 			session = HibernateUtil.getSessionAnnotationFactory().openSession();
+			session.beginTransaction();
 			
 			Vehicle vehicle = new Vehicle();
 			vehicle.setUniqueId(uniqueId);
@@ -107,7 +108,7 @@ public class VehicleDao {
 	 */
 	public static JSONObject getVehicleInfo(String uniqueId){
 	
-		JSONObject vehicleInfo = new JSONObject();
+		JSONObject result = new JSONObject();
 		Session session = null;
 		try {
 			session = HibernateUtil.getSessionAnnotationFactory().openSession();
@@ -119,14 +120,21 @@ public class VehicleDao {
 			if(list.size() <= 1){
 				if(list.size() == 0){
 					//No user found
-					vehicleInfo.put(Application.ERROR, "No vehicle with uniqueId " + uniqueId + " found");
+					result.put(Application.RESULT, Application.ERROR);
+					result.put(Application.ERROR, "No vehicle with uniqueId " + uniqueId + " found");
 				} else {
 					Iterator<Vehicle> vehicleList = list.iterator();
-					Vehicle vehicle = vehicleList.next();
-					vehicleInfo.put("registrationNumber", vehicle.getRegistrationNumber());
-					vehicleInfo.put("uniqueId", vehicle.getUniqueId());
-					//vehicleInfo.put("vehicleCreationTime", vehicle.getVehicleCreationTime());
-					vehicleInfo.put("image", vehicle.getImage());
+					JSONArray vehicleArray = new JSONArray();
+					while(vehicleList.hasNext()){
+						Vehicle vehicle = vehicleList.next();
+						JSONObject vehicleJson = new JSONObject();
+						vehicleJson.put("registrationNumber", vehicle.getRegistrationNumber());
+						vehicleJson.put("uniqueId", vehicle.getUniqueId());
+						//vehicleInfo.put("vehicleCreationTime", vehicle.getVehicleCreationTime());
+						vehicleJson.put("image", vehicle.getImage());
+						vehicleArray.put(vehicleJson);
+					}
+					result.put(Application.RESULT, vehicleArray);
 				}
 			} else {
 				//LOG ERROR HERE ONCE LOGGER IS INTEGRATED
@@ -134,15 +142,15 @@ public class VehicleDao {
 			}
 		} catch(Exception e){
 			e.printStackTrace();
-			vehicleInfo.put(Application.RESULT, Application.ERROR);
-			vehicleInfo.put(Application.ERROR, e.getMessage());
+			result.put(Application.RESULT, Application.ERROR);
+			result.put(Application.ERROR, e.getMessage());
 		} finally {
 			if(session!=null){
 				session.close();
 			}
 		}
 		
-		return vehicleInfo;
+		return result;
 	}
 	
 	/**
@@ -152,7 +160,7 @@ public class VehicleDao {
 	 */
 	public static JSONObject getAllVehicles(){
 	
-		JSONObject vehiclesInfo = new JSONObject();
+		JSONObject result = new JSONObject();
 		Session session = null;
 		try {
 			session = HibernateUtil.getSessionAnnotationFactory().openSession();
@@ -162,8 +170,8 @@ public class VehicleDao {
 			
 				if(list.size() == 0){
 					//No vehicle found
-					vehiclesInfo.put(Application.RESULT, Application.ERROR);
-					vehiclesInfo.put(Application.ERROR_MESSAGE, "No vehicle found");
+					result.put(Application.RESULT, Application.ERROR);
+					result.put(Application.ERROR_MESSAGE, "No vehicle found");
 				} else {
 					Iterator<Vehicle> vehicleList = list.iterator();
 					JSONArray vehiclesArray = new JSONArray();
@@ -176,17 +184,18 @@ public class VehicleDao {
 						vehicleJson.put("image", vehicle.getImage());
 						vehiclesArray.put(vehicleJson);
 					}
+					result.put(Application.RESULT, vehiclesArray);
 				}
 		} catch(Exception e){
 			e.printStackTrace();
-			vehiclesInfo.put(Application.RESULT, Application.ERROR);
-			vehiclesInfo.put(Application.ERROR, e.getMessage());
+			result.put(Application.RESULT, Application.ERROR);
+			result.put(Application.ERROR, e.getMessage());
 		} finally {
 			if(session!=null){
 				session.close();
 			}
 		}
 		
-		return vehiclesInfo;
+		return result;
 	}
 }

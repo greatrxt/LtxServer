@@ -6,11 +6,14 @@ import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.Date;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -40,6 +43,8 @@ public class Location implements Serializable {
 	private Date mTime;		
 	private double mBearing;
 	private Date packetReceivedTime;
+	private Vehicle vehicle;
+	private double batteryCharge;
 	
 	
 	@Id @GeneratedValue(strategy=GenerationType.IDENTITY)
@@ -155,5 +160,22 @@ public class Location implements Serializable {
 		this.packetReceivedTime = packetReceivedTime;
 	}
 	
+	@ManyToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name="unique_id", nullable = false, referencedColumnName = "unique_id")
+	public Vehicle getVehicle() {
+		return vehicle;
+	}
+
+	public void setVehicle(Vehicle vehicle) {
+		this.vehicle = vehicle;
+	}
 	
+	@Column(name="battery_charge")
+	public double getBatteryCharge() {
+		return batteryCharge;
+	}
+
+	public void setBatteryCharge(double batteryCharge) {
+		this.batteryCharge = batteryCharge;
+	}
 }

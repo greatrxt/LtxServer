@@ -60,45 +60,40 @@ public class DriverService {
 
 	@POST
 	@Path("/form")
-	public Response uploadFile(@Context ServletContext context, InputStream is) {
+	public Response uploadFile(InputStream is) {
 	
 		JSONObject result = new JSONObject();
 		try {
-			String contextPath = context.getContextPath();
-			String contextRealPath = context.getRealPath(contextPath);
-			System.out.println(context.getRealPath(contextRealPath));
-			String imagePath = contextRealPath + File.separator + Application.FOLDER_UPLOADS + File.separator + Application.FOLDER_DRIVER_IMAGES; 
-			File imageUploadFolder = new File(imagePath);
-			
-			if(!imageUploadFolder.exists()){
-				System.out.println("Creating image folder");
-				imageUploadFolder.mkdirs();
-			}
 
 			JSONObject inputJson = SystemUtils.convertInputStreamToJSON(is);		
-
-			String name, username, password, contact, doj, image = null;
+			String missingFields = "";
+			String name = null, username = null, password = null, contact, doj, image = null;
 			
 			if(inputJson.has("name")){
 				name = inputJson.getString("name");
+				if(name.trim().isEmpty()){
+					missingFields+="\nname ";	
+				}
 			} else {
-				name = "";
+				missingFields+="\nname ";
 			}
 			
 			if(inputJson.has("username")){
 				username = inputJson.getString("username");
+				if(username.trim().isEmpty()){
+					missingFields+="\nusername ";	
+				}
 			} else {
-				result.put(Application.RESULT, Application.ERROR);
-				result.put(Application.ERROR_MESSAGE, "Critical field missing : Username");
-				return Response.status(400).entity(result.toString()).build();
+				missingFields+="\nusername ";
 			}
 			
 			if(inputJson.has("password")){
 				password = inputJson.getString("password");
+				if(password.trim().isEmpty()){
+					missingFields+="\npassword ";	
+				}
 			} else {
-				result.put(Application.RESULT, Application.ERROR);
-				result.put(Application.ERROR_MESSAGE, "Critical field missing : Password");
-				return Response.status(400).entity(result.toString()).build();
+				missingFields+="\npassword ";
 			}
 
 			if(inputJson.has("contact")){
@@ -124,6 +119,12 @@ public class DriverService {
 			BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(imageBytes));
 			File imageFile = new File(imageUploadFolder.getAbsolutePath() + File.separator + username + ".png");
 			ImageIO.write(bufferedImage, "png", imageFile);*/
+			
+			if(missingFields.trim().length() != 0){
+				result.put(Application.RESULT, Application.ERROR);
+				result.put(Application.ERROR_MESSAGE, "Critical Fields Missing : "+missingFields);
+				return Response.status(400).entity(result.toString()).build();
+			}
 			
 			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
 			result = DriverDao.storeDriverInfo(username, name, contact, sdf.parse(doj), password, image);

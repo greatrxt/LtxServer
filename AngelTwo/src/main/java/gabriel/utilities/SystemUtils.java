@@ -188,4 +188,38 @@ public class SystemUtils {
 		}
 		
 	}
+	
+	public static void createVehicleImageInTempCache(ServletContext context, JSONObject result) throws IOException {
+		if(!result.get("result").toString().trim().equals(Application.ERROR)){
+			//Create a copy of image on server that can be accessed from the web client
+			String contextPath = context.getContextPath();
+			String contextRealPath = context.getRealPath(contextPath);
+			System.out.println(context.getRealPath(contextRealPath));
+			String imagePath = contextRealPath + File.separator + Application.FOLDER_UPLOADS + File.separator + Application.FOLDER_VEHICLE_IMAGES; 
+			File imageUploadFolder = new File(imagePath);
+			
+			if(!imageUploadFolder.exists()){
+				System.out.println("Creating image folder");
+				imageUploadFolder.mkdirs();
+			}
+			
+			JSONArray vehicleArray = result.getJSONArray("result");
+			for(int d = 0; d < vehicleArray.length(); d++){
+				JSONObject vehicle = vehicleArray.getJSONObject(d);
+				String image = Application.STANDARD_IMAGE_NOT_FOUND;
+				if(vehicle.has("image")){
+					if(!vehicle.getString("image").isEmpty()){
+						image = vehicle.getString("image");
+						vehicle.remove("image");	//remove image. 
+					}
+				}
+				
+				byte[] imageBytes = javax.xml.bind.DatatypeConverter.parseBase64Binary(image);
+				BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(imageBytes));
+				File imageFile = new File(imageUploadFolder.getAbsolutePath() + File.separator + vehicle.getString("uniqueId") + ".png");
+				ImageIO.write(bufferedImage, "png", imageFile);
+			}	
+		}
+		
+	}
 }

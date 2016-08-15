@@ -47,7 +47,7 @@ public class Vehicle implements Serializable  {
 		this.id = id;
 	}
 	
-	@Column(name="image")
+	@Column(name="image", columnDefinition="TEXT")
 	public String getImage() {
 		return image;
 	}

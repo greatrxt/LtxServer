@@ -13,7 +13,7 @@ public class TripService {
 
 	@GET
 	public static Response testTripDao(){
-		TripDao.saveTripData("12346", "efgh", new Date(), 12.2332, 11.32322);
+		TripDao.saveTripData("8705760967", "Brad", new Date(), 12.2332, 11.32322);
 		return Response.status(Response.Status.OK).build();
 	}
 }
