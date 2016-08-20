@@ -18,6 +18,45 @@ import gabriel.utilities.HibernateUtil;
 public class VehicleDao {
 	
 	/**
+	 * Edit existing vehicle
+	 * @param uniqueId
+	 * @param image
+	 * @param registrationNumber
+	 * @return
+	 */
+	public static JSONObject editVehicle(String uniqueId, String image, String registrationNumber){
+		JSONObject result = new JSONObject();
+		Session session = null;
+		try {
+			session = HibernateUtil.getSessionAnnotationFactory().openSession();
+			session.beginTransaction();
+			
+			Vehicle vehicle = getVehicle(uniqueId);
+			if(image == null){
+				vehicle.setImage("");
+			} else if(image == "1"){
+				//do nothing
+			} else {
+				vehicle.setImage(image);
+			}
+			vehicle.setRegistrationNumber(registrationNumber);	
+			session.update(vehicle);		
+			session.getTransaction().commit();
+			result.put(Application.RESULT, Application.SUCCESS);
+		} catch(Exception e){
+			e.printStackTrace();
+			result.put(Application.RESULT, Application.ERROR);
+			result.put(Application.ERROR_MESSAGE, e.getMessage());
+		} finally {
+			if(session!=null){
+				session.close();
+			}
+		}
+		
+		return result;
+	}
+	
+	/**
 	 * Store vehicle information in DB
 	 * @param uniqueId
 	 * @param name
@@ -102,6 +141,39 @@ public class VehicleDao {
 	}
 	
 	/**
+	 * 
+	 * @param uniqueId
+	 * @return
+	 */
+	public static Vehicle getVehicle(String uniqueId){
+		Session session = null;
+		try {
+			session = HibernateUtil.getSessionAnnotationFactory().openSession();
+			Criteria criteria = session.createCriteria(Vehicle.class);
+			criteria.add(Restrictions.eq("uniqueId", uniqueId));
+			List<Vehicle> list = criteria.list();
+			if(list.size() <= 1){
+				if(list.size() == 0){
+					//No user found
+					return null;
+				} else {
+					return list.iterator().next();
+				}
+			} else {
+				//LOG ERROR HERE ONCE LOGGER IS INTEGRATED
+				System.out.println("ERROR. MORE THAN 1 USERS WITH uniqueId :"+uniqueId+" FOUND");
+			}
+		} catch(Exception e){
+			e.printStackTrace();
+		} finally {
+			if(session!=null){
+				session.close();
+			}
+		}
+		return null;
+	}
+	
+	/**
 	 * Fetch vehicle with particular uniqueId from DB
 	 * @param uniqueId
 	 * @return
@@ -121,7 +193,7 @@ public class VehicleDao {
 				if(list.size() == 0){
 					//No user found
 					result.put(Application.RESULT, Application.ERROR);
-					result.put(Application.ERROR, "No vehicle with uniqueId " + uniqueId + " found");
+					result.put(Application.ERROR_MESSAGE, "No vehicle with uniqueId " + uniqueId + " found");
 				} else {
 					Iterator<Vehicle> vehicleList = list.iterator();
 					JSONArray vehicleArray = new JSONArray();

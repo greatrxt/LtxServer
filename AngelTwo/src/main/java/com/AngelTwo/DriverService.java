@@ -22,6 +22,28 @@ import gabriel.utilities.SystemUtils;
 @Path("/driver")
 public class DriverService {
 	
+	
+	@POST
+	@Path("/verify")
+	@Produces(MediaType.APPLICATION_JSON)
+	public Response verifyDriver(@Context ServletContext context, InputStream is){
+		JSONObject result = null;
+		try {
+			String inputStream = SystemUtils.convertInputStreamToString(is);
+			JSONObject inputJson = new JSONObject(inputStream);
+			String username = inputJson.getString("username").trim();
+			String password = inputJson.getString("password").trim();
+			result = DriverDao.driverExists(username, password);						
+			return Response.status(200).entity(result.toString()).build();
+		} catch(Exception e){
+			e.printStackTrace();
+			result = new JSONObject();
+			result.put(Application.RESULT, Application.ERROR);
+			result.put(Application.ERROR_MESSAGE, e.getMessage());
+			return Response.status(500).entity(result.toString()).build();
+		}	
+	}
+	
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response fetchAllDrivers(@Context ServletContext context){

@@ -129,11 +129,5 @@ public class Osrm {
 			}
 			
 	}
-	/**
-	 * Adds snapped lat lon to ping table
-	 */
-	public static void snapPing(int recordId){
-		
-	}
 	
 }

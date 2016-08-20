@@ -171,6 +171,72 @@ public class DriverDao {
 	}
 	
 	/**
+	 * 
+	 * @param username
+	 * @param password
+	 * @return
+	 */
+	public static JSONObject driverExists(String username, String password){
+		JSONObject result = new JSONObject();
+		Session session = null;
+		try {
+			
+			session = HibernateUtil.getSessionAnnotationFactory().openSession();
+			session.beginTransaction();
+			
+			Criteria criteria = session.createCriteria(Driver.class);
+			criteria.add(Restrictions.eq("username", username));
+			criteria.add(Restrictions.eq("password", password));
+			List<Driver> list = criteria.list();
+			if(list.size() == 1){
+				result.put(Application.RESULT, Application.SUCCESS);
+			} else {
+				result.put(Application.RESULT, Application.FAILED);
+			}
+		} catch(Exception e){
+			e.printStackTrace();
+			result.put(Application.RESULT, Application.ERROR);
+			result.put(Application.ERROR_MESSAGE, e.getMessage());
+		} finally {
+			if(session!=null){
+				session.close();
+			}
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * 
+	 * @param username
+	 * @return
+	 */
+	public static Driver getDriver(String username){
+		Session session = null;
+		try {
+			
+			session = HibernateUtil.getSessionAnnotationFactory().openSession();
+			session.beginTransaction();
+			
+			Criteria criteria = session.createCriteria(Driver.class);
+			criteria.add(Restrictions.eq("username", username));
+			
+			List<Driver> list = criteria.list();
+			if(list.size() == 1){
+				return list.get(0);
+			}
+		} catch (Exception e){
+			e.printStackTrace();
+		} finally {
+			if(session!=null){
+				session.close();
+			}
+		}
+		
+		return null;
+	}
+	
+	/**
 	 * Fetch user with particular username from DB
 	 * @param username
 	 * @return

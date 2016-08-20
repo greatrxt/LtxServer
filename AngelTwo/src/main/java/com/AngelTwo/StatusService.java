@@ -1,8 +1,6 @@
 package com.AngelTwo;
 
 import gabriel.hibernate.dao.LocationDao;
-import gabriel.hibernate.dao.PingDao;
-
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -37,9 +35,7 @@ public class StatusService {
     public Response getVehicleStatus(@PathParam("maxresults") int maxResults, @PathParam("accuracy") int accuracy){
     	JSONObject vehicleStatus = new JSONObject();
     	JSONArray locationHistory = LocationDao.getLocationJson(maxResults, accuracy);
-    	JSONArray pingHistory = PingDao.getPingJson(maxResults);
     	vehicleStatus.put("location", locationHistory);
-    	vehicleStatus.put("pings", pingHistory);
     	return Response.status(Response.Status.OK).entity(vehicleStatus.toString()).build();
     }
 }

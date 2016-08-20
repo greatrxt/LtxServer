@@ -45,7 +45,9 @@ public class Location implements Serializable {
 	private Date packetReceivedTime;
 	private Vehicle vehicle;
 	private double batteryCharge;
-	
+	private Driver driver;
+	private int signalStrength;//1, 2, 3 or 4
+	private String rawPacket;
 	
 	@Id @GeneratedValue(strategy=GenerationType.IDENTITY)
 	@Column(name="location_packet_id")
@@ -160,14 +162,24 @@ public class Location implements Serializable {
 		this.packetReceivedTime = packetReceivedTime;
 	}
 	
-	@ManyToOne(cascade = CascadeType.ALL)
-	@JoinColumn(name="unique_id", nullable = false, referencedColumnName = "unique_id")
+	@ManyToOne(cascade = CascadeType.PERSIST)
+	@JoinColumn(name="vehicle_unique_id", nullable = false, referencedColumnName = "unique_id")
 	public Vehicle getVehicle() {
 		return vehicle;
 	}
 
 	public void setVehicle(Vehicle vehicle) {
 		this.vehicle = vehicle;
+	}
+	
+	@ManyToOne(cascade = CascadeType.PERSIST)
+	@JoinColumn(name="username", nullable = false, referencedColumnName = "username")
+	public Driver getDriver() {
+		return driver;
+	}
+
+	public void setDriver(Driver driver) {
+		this.driver = driver;
 	}
 	
 	@Column(name="battery_charge")
@@ -178,4 +190,24 @@ public class Location implements Serializable {
 	public void setBatteryCharge(double batteryCharge) {
 		this.batteryCharge = batteryCharge;
 	}
+
+	@Column(name="signal_strength") 
+	public int getSignalStrength() {
+		return signalStrength;
+	}
+
+	public void setSignalStrength(int signalStrength) {
+		this.signalStrength = signalStrength;
+	}
+	
+	@Column(name="raw_packet", columnDefinition="TEXT")
+	public String getRawPacket() {
+		return rawPacket;
+	}
+
+	public void setRawPacket(String rawPacket) {
+		this.rawPacket = rawPacket;
+	}
+
+	
 }
