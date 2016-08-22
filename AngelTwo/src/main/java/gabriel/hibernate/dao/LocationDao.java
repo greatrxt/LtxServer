@@ -8,17 +8,12 @@ import gabriel.map.Osrm;
 import gabriel.utilities.HibernateUtil;
 import gabriel.utilities.SystemUtils;
 
-import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
-
-import javax.persistence.Persistence;
-import javax.persistence.criteria.CriteriaQuery;
 
 import org.hibernate.Criteria;
 import org.hibernate.Session;
@@ -30,6 +25,76 @@ import org.json.JSONObject;
 
 //http://docs.oracle.com/javaee/6/tutorial/doc/gjivm.html#gjivs
 public class LocationDao {
+	
+	/**
+	 * Get last known location for every vehicle
+	 * @return
+	 */
+	public static JSONObject getLastKnownLocationForAllVehicles(){
+		JSONObject result = new JSONObject();
+		Session session = null;
+		try {
+			List<Vehicle> vehiclesList = VehicleDao.getAllVehiclesList();
+			
+			if(vehiclesList == null){
+				throw new Exception("Failed to retieve vehicles");
+			} else if (vehiclesList.isEmpty()){
+				throw new Exception("No vehicles found");
+			}
+			
+			Iterator<Vehicle> iterator = vehiclesList.iterator();
+			session = HibernateUtil.getSessionAnnotationFactory().openSession();
+			JSONArray vehicleArray = new JSONArray();
+			while(iterator.hasNext()){
+				
+				JSONObject vehicleJson = new JSONObject();
+				
+				Vehicle vehicle = iterator.next();
+				Criteria criteria = session.createCriteria(Location.class);
+				criteria.add(Restrictions.eq("vehicle", vehicle));
+				criteria.add(Restrictions.gt("mBearing", 0.0));
+				criteria.addOrder(Order.desc("mTime"));
+				criteria.setMaxResults(1);
+				
+				Location location = (Location) criteria.uniqueResult();
+				vehicleJson.put("uniqueId", vehicle.getUniqueId());
+				vehicleJson.put("registration", vehicle.getRegistrationNumber());
+				
+				JSONObject locationJson = new JSONObject();
+				if(location!=null){
+					locationJson.put("mBearing", location.getmBearing());
+					locationJson.put("mLatitude", location.getmLatitude());
+					locationJson.put("mLongitude", location.getmLongitude());
+					locationJson.put("mTime", location.getmTime());
+					locationJson.put("mSpeed", location.getmSpeed());
+				} else {
+					locationJson.put("bearing", -1);
+					locationJson.put("latitude", -1);
+					locationJson.put("longitude", -1);
+					locationJson.put("mTime", -1);
+					locationJson.put("mSpeed", -1);
+				}
+				
+				vehicleJson.put("location", locationJson);
+				
+				vehicleArray.put(vehicleJson);
+			}
+			
+			result.put(Application.RESULT, vehicleArray);
+			
+		} catch(Exception e){
+			e.printStackTrace();
+			result = new JSONObject();
+			result.put(Application.RESULT, Application.ERROR);
+			result.put(Application.ERROR_MESSAGE, e.getMessage());
+		} finally {
+			if(session!=null){
+				session.close();
+			}
+		}
+		
+		return result;
+	}
 
 	/**
 	 * Store location packets received from device
@@ -161,7 +226,7 @@ public class LocationDao {
 		        	double snappedLatitude = location.getSnappedLatitude();
 		        	double snappedLongitude = location.getSnappedLongitude();
 		        	
-		        	if(snappedLatitude != Osrm.STATUS_SNAP_FAILED && snappedLongitude!=Osrm.STATUS_SNAP_FAILED){
+		        	if(snappedLatitude != Osrm.STATUS_SNAP_FAILED && snappedLongitude != Osrm.STATUS_SNAP_FAILED){
 			        	locationJson.put("snappedLatitude", location.getSnappedLatitude());
 			        	locationJson.put("snappedLongitude", location.getSnappedLongitude());  
 		        	} else {

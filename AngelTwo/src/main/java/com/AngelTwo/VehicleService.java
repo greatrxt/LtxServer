@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import javax.servlet.ServletContext;
+import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
@@ -144,7 +145,12 @@ public class VehicleService {
 			
 			//process image
 			if(inputJson.has("image")){
-				image = inputJson.getString("image").split(",")[1];
+				String tempImageString = inputJson.getString("image");
+				if(tempImageString.trim().isEmpty()){
+					image = Application.STANDARD_IMAGE_NOT_FOUND.split(",")[1];
+				} else {
+					image = inputJson.getString("image").split(",")[1];
+				}
 			} else {
 				image = Application.STANDARD_IMAGE_NOT_FOUND.split(",")[1];
 			}
@@ -189,6 +195,22 @@ public class VehicleService {
 	
 	@Path("/{uniqueId}")
 	@Produces(MediaType.APPLICATION_JSON)
+	@DELETE
+	public static Response deleteVehicle(@Context ServletContext context, @PathParam("uniqueId") String uniqueId){
+		JSONObject result = null;
+		try {
+			result = VehicleDao.deleteVehicle(String.valueOf(uniqueId));
+			return Response.status(Response.Status.OK).entity(result.toString()).build();
+		} catch (Exception e) {
+			result = new JSONObject();
+			result.put(Application.RESULT, Application.ERROR);
+			result.put(Application.ERROR_MESSAGE, e.getMessage());
+			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(result.toString()).build();
+		}
+	}
+	
+	@Path("/{uniqueId}")
+	@Produces(MediaType.APPLICATION_JSON)
 	@GET
 	public static Response getVehicleInfo(@Context ServletContext context, @PathParam("uniqueId") String uniqueId){
 		JSONObject result = null;
@@ -196,7 +218,7 @@ public class VehicleService {
 			result = VehicleDao.getVehicleInfo(String.valueOf(uniqueId));
 			SystemUtils.createVehicleImageInTempCache(context, result);
 			return Response.status(Response.Status.OK).entity(result.toString()).build();
-		} catch (IOException e) {
+		} catch (Exception e) {
 			result = new JSONObject();
 			result.put(Application.RESULT, Application.ERROR);
 			result.put(Application.ERROR_MESSAGE, e.getMessage());

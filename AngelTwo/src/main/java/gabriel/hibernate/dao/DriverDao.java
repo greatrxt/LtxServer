@@ -120,6 +120,33 @@ public class DriverDao {
 		return result;
 	}
 	
+	
+	/**
+	 * 
+	 * @return
+	 */
+	public static List<Driver> getAllDriversList(){
+		
+		Session session = null;
+		try {
+			session = HibernateUtil.getSessionAnnotationFactory().openSession();
+			session.beginTransaction();
+			
+			Criteria criteria = session.createCriteria(Driver.class);			
+			List<Driver> list = criteria.list();
+			return list;
+			
+		} catch(Exception e){
+			e.printStackTrace();
+		} finally {
+			if(session!=null){
+				session.close();
+			}
+		}
+		
+		return null;
+	}
+	
 	/**
 	 * 
 	 * @return

@@ -28,8 +28,19 @@ public class LocationService {
 
 	@GET
     @Produces(MediaType.TEXT_PLAIN)
-    public String getIt() {
-        return "Restful API working";
+    public Response getLastKnownStatusOfAllVehicles() {
+		JSONObject result;
+		try {
+			result = LocationDao.getLastKnownLocationForAllVehicles();
+		} catch (Exception e) {
+			result = new JSONObject();
+			result.put(Application.RESULT, Application.ERROR);
+			result.put(Application.ERROR_MESSAGE, e.getMessage());
+			e.printStackTrace();
+			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(result.toString()).build();
+		}
+		
+    	return Response.status(Response.Status.OK).entity(result.toString()).build();
     }
 	
     @Path("/vehicle/{id}/{fromDate}/{toDate}")
@@ -45,7 +56,9 @@ public class LocationService {
 			result.put(Application.RESULT, Application.ERROR);
 			result.put(Application.ERROR_MESSAGE, e.getMessage());
 			e.printStackTrace();
+			return Response.status(Response.Status.INTERNAL_SERVER_ERROR).entity(result.toString()).build();
 		}
+		
     	return Response.status(Response.Status.OK).entity(result.toString()).build();
     }
 	

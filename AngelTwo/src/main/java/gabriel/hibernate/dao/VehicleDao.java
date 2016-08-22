@@ -230,6 +230,32 @@ public class VehicleDao {
 	 * @param uniqueId
 	 * @return
 	 */
+	public static List<Vehicle> getAllVehiclesList(){
+
+		Session session = null;
+		try {
+			session = HibernateUtil.getSessionAnnotationFactory().openSession();
+			
+			Criteria criteria = session.createCriteria(Vehicle.class);
+			List<Vehicle> list = criteria.list();
+			return list;
+		} catch(Exception e){
+			e.printStackTrace();
+		} finally {
+			if(session!=null){
+				session.close();
+			}
+		}
+		
+		return null;
+	}
+
+	
+	/**
+	 * Fetch all vehicles fromDB
+	 * @param uniqueId
+	 * @return
+	 */
 	public static JSONObject getAllVehicles(){
 	
 		JSONObject result = new JSONObject();
@@ -262,6 +288,53 @@ public class VehicleDao {
 			e.printStackTrace();
 			result.put(Application.RESULT, Application.ERROR);
 			result.put(Application.ERROR, e.getMessage());
+		} finally {
+			if(session!=null){
+				session.close();
+			}
+		}
+		
+		return result;
+	}
+
+	/**
+	 * Delete vehicle
+	 * @param uniqueId
+	 * @return
+	 */
+	public static JSONObject deleteVehicle(String uniqueId) {
+		
+		JSONObject result = new JSONObject();
+		Session session = null;
+		try {
+			session = HibernateUtil.getSessionAnnotationFactory().openSession();
+			session.beginTransaction();
+			Criteria criteria = session.createCriteria(Vehicle.class);
+			criteria.add(Restrictions.eq("uniqueId", uniqueId));
+			
+			List<Vehicle> list = criteria.list();
+			if(list.size() <= 1){
+				if(list.size() == 0){
+					//No user found
+					result.put(Application.RESULT, Application.ERROR);
+					result.put(Application.ERROR_MESSAGE, "No vehicle with uniqueId " + uniqueId + " found");
+				} else {
+					Iterator<Vehicle> vehicleList = list.iterator();
+					while(vehicleList.hasNext()){
+						Vehicle vehicle = vehicleList.next();
+						session.delete(vehicle);
+					}
+					session.getTransaction().commit();
+					result.put(Application.RESULT, Application.SUCCESS);
+				}
+			} else {
+				//LOG ERROR HERE ONCE LOGGER IS INTEGRATED
+				System.out.println("ERROR. MORE THAN 1 USERS WITH uniqueId :"+uniqueId+" FOUND");
+			}
+		} catch(Exception e){
+			e.printStackTrace();
+			result.put(Application.RESULT, Application.ERROR);
+			result.put(Application.ERROR_MESSAGE, e.getMessage());
 		} finally {
 			if(session!=null){
 				session.close();

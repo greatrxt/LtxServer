@@ -183,7 +183,10 @@ public class SystemUtils {
 				byte[] imageBytes = javax.xml.bind.DatatypeConverter.parseBase64Binary(image);
 				BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(imageBytes));
 				File imageFile = new File(imageUploadFolder.getAbsolutePath() + File.separator + driver.getString("username") + ".png");
-				ImageIO.write(bufferedImage, "png", imageFile);
+				
+				if(bufferedImage!=null && imageFile!=null){
+					ImageIO.write(bufferedImage, "png", imageFile);
+				}
 			}	
 		}
 		
@@ -217,7 +220,9 @@ public class SystemUtils {
 				byte[] imageBytes = javax.xml.bind.DatatypeConverter.parseBase64Binary(image);
 				BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(imageBytes));
 				File imageFile = new File(imageUploadFolder.getAbsolutePath() + File.separator + vehicle.getString("uniqueId") + ".png");
-				ImageIO.write(bufferedImage, "png", imageFile);
+				if(bufferedImage!=null && imageFile!=null){
+					ImageIO.write(bufferedImage, "png", imageFile);
+				}
 			}	
 		}
 		
