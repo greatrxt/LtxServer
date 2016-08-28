@@ -14,8 +14,74 @@ import org.json.JSONObject;
 import gabriel.application.Application;
 import gabriel.hibernate.entity.Driver;
 import gabriel.utilities.HibernateUtil;
+import gabriel.utilities.SystemUtils;
 
 public class DriverDao {
+	
+	public static final String UNREGISTERED_DRIVER = "unregistered_driver";
+	public static final String DELETED_DRIVER = "deleted_driver";
+	
+	/**
+	 * Edit driver information in DB
+	 * @param username
+	 * @param name
+	 * @param contactNumber
+	 * @param dateOfJoining
+	 * @param password
+	 * @param image
+	 * @return
+	 */
+	public static JSONObject editDriverInfo(String username, String name, String contactNumber, Date dateOfJoining, String password, String image){
+		
+		Session session = null;
+		
+		JSONObject result = new JSONObject();
+		
+		try {
+			
+			if(getDriver(username) == null){
+				result.put(Application.RESULT, Application.ERROR);
+				result.put(Application.ERROR_MESSAGE, "Username " + username + " does not exist");
+			} else {
+			
+				session = HibernateUtil.getSessionAnnotationFactory().openSession();
+				session.beginTransaction();
+				
+				Driver driver = getDriver(username);
+				driver.setName(name);
+				driver.setContactNumber(contactNumber);
+				driver.setDateOfJoining(dateOfJoining);
+				if(!password.isEmpty()){
+					driver.setPassword(password);
+				}
+				if(image == null){
+					driver.setImage(Application.STANDARD_IMAGE_NOT_FOUND);
+				} else {
+					if(!image.trim().isEmpty()){
+						driver.setImage(image);	
+					}
+				}
+				driver.setRecordCreationTime(new Date());	
+				
+				session.update(driver);		
+				
+				session.getTransaction().commit();		
+				
+				result.put(Application.RESULT, Application.SUCCESS);
+				
+			}
+			
+		} catch(Exception e){
+			e.printStackTrace();
+			result = SystemUtils.generateErrorMessage(e.getMessage());
+		} finally {
+			if(session!=null){
+				session.close();
+			}
+		}
+		
+		return result;
+	}
 	
 	/**
 	 * Store driver information in DB
@@ -62,8 +128,7 @@ public class DriverDao {
 			
 		} catch(Exception e){
 			e.printStackTrace();
-			result.put(Application.RESULT, Application.ERROR);
-			result.put(Application.ERROR_MESSAGE, e.getMessage());
+			result = SystemUtils.generateErrorMessage(e.getMessage());
 		} finally {
 			if(session!=null){
 				session.close();
@@ -87,30 +152,38 @@ public class DriverDao {
 			
 			Criteria criteria = session.createCriteria(Driver.class);
 			Disjunction or = Restrictions.disjunction();
-			or.add(Restrictions.ilike("username", query));
-			or.add(Restrictions.ilike("name", query));
-			or.add(Restrictions.ilike("contact_number", query));
+			or.add(Restrictions.ilike("username", "%" + query +"%"));
+			or.add(Restrictions.ilike("name", "%" + query + "%"));
+			or.add(Restrictions.ilike("contactNumber", "%" + query +"%"));
 			criteria.add(or);
+			criteria.setMaxResults(5);
 			
 			List<Driver> drivers = criteria.list();
-			if(drivers.size() == 0){
-				result.put(Application.ERROR, "No users found");
-			} else {
-				JSONArray searchArray = new JSONArray();
+
+			JSONArray searchArray = new JSONArray();
+			
+			Iterator<Driver> iterator = drivers.iterator();
+			while(iterator.hasNext()){
+				Driver driver = iterator.next();
 				
-				Iterator<Driver> iterator = drivers.iterator();
-				while(iterator.hasNext()){
-					Driver driver = iterator.next();
-					JSONObject driverJson = getDriverInfo(driver.getUsername());
+				if(!driver.getUsername().trim().equals(UNREGISTERED_DRIVER) 
+						&& !driver.getUsername().trim().equals(DELETED_DRIVER)){
+					JSONObject driverJson = new JSONObject();
+					driverJson.put("name", driver.getName());
+					driverJson.put("username", driver.getUsername());
+					driverJson.put("contactNumber", driver.getContactNumber());
+					driverJson.put("recordCreationTime", driver.getRecordCreationTime());
+					driverJson.put("dateOfJoining", driver.getDateOfJoining());
+					driverJson.put("image", driver.getImage());
 					searchArray.put(driverJson);
 				}
-				
-				result.put(Application.RESULT, searchArray);
 			}
+			
+			result.put(Application.RESULT, searchArray);
+			
 		} catch(Exception e){
 			e.printStackTrace();
-			result.put(Application.RESULT, Application.ERROR);
-			result.put(Application.ERROR_MESSAGE, e.getMessage());
+			result = SystemUtils.generateErrorMessage(e.getMessage());
 		} finally {
 			if(session!=null){
 				session.close();
@@ -172,22 +245,23 @@ public class DriverDao {
 				while(driverList.hasNext()){
 					Driver driver = driverList.next();
 					JSONObject result = new JSONObject();
-					result.put("name", driver.getName());
-					result.put("username", driver.getUsername());
-					result.put("contactNumber", driver.getContactNumber());
-					//result.put("recordCreationTime", driver.getRecordCreationTime());
-					//result.put("dateOfJoining", driver.getDateOfJoining());
-					result.put("image", driver.getImage());
-					resultArray.put(result);
+					if(!driver.getUsername().trim().equals(UNREGISTERED_DRIVER) 
+							&& !driver.getUsername().trim().equals(DELETED_DRIVER)){
+						result.put("name", driver.getName());
+						result.put("username", driver.getUsername());
+						result.put("contactNumber", driver.getContactNumber());
+						//result.put("recordCreationTime", driver.getRecordCreationTime());
+						//result.put("dateOfJoining", driver.getDateOfJoining());
+						result.put("image", driver.getImage());
+						resultArray.put(result);
+					}
 				}
 				resultsJson.put(Application.RESULT, resultArray);
 			}
 			
 		} catch(Exception e){
 			e.printStackTrace();
-			resultsJson = new JSONObject();
-			resultsJson.put(Application.RESULT, Application.ERROR);
-			resultsJson.put(Application.ERROR_MESSAGE, e.getMessage());
+			resultsJson = SystemUtils.generateErrorMessage(e.getMessage());
 		} finally {
 			if(session!=null){
 				session.close();
@@ -222,8 +296,7 @@ public class DriverDao {
 			}
 		} catch(Exception e){
 			e.printStackTrace();
-			result.put(Application.RESULT, Application.ERROR);
-			result.put(Application.ERROR_MESSAGE, e.getMessage());
+			result = SystemUtils.generateErrorMessage(e.getMessage());
 		} finally {
 			if(session!=null){
 				session.close();
@@ -231,6 +304,71 @@ public class DriverDao {
 		}
 		
 		return result;
+	}
+	
+	/**
+	 * 
+	 * @return unregistered driver
+	 */
+	public static Driver getDeletedDriver(){
+		Session session = null;
+		try {
+			
+			session = HibernateUtil.getSessionAnnotationFactory().openSession();
+			session.beginTransaction();
+			
+			Criteria criteria = session.createCriteria(Driver.class);
+			criteria.add(Restrictions.eq("username", DELETED_DRIVER));
+			
+			List<Driver> list = criteria.list();
+			if(list.size() == 0){
+				storeDriverInfo(DELETED_DRIVER, DELETED_DRIVER, "0", new Date(), DELETED_DRIVER, Application.STANDARD_IMAGE_NOT_FOUND);
+				return getUnregisteredDriver();
+			} else {
+				return list.get(0);
+			}
+		} catch (Exception e){
+			e.printStackTrace();
+		} finally {
+			if(session!=null){
+				session.close();
+			}
+		}
+		
+		return null;
+	}
+	
+	
+	/**
+	 * 
+	 * @return unregistered driver
+	 */
+	public static Driver getUnregisteredDriver(){
+		Session session = null;
+		try {
+			
+			session = HibernateUtil.getSessionAnnotationFactory().openSession();
+			session.beginTransaction();
+			
+			Criteria criteria = session.createCriteria(Driver.class);
+			criteria.add(Restrictions.eq("username", UNREGISTERED_DRIVER));
+			
+			List<Driver> list = criteria.list();
+			if(list.size() == 0){
+				storeDriverInfo(UNREGISTERED_DRIVER, UNREGISTERED_DRIVER, "0", new Date(), UNREGISTERED_DRIVER, Application.STANDARD_IMAGE_NOT_FOUND);
+				return getUnregisteredDriver();
+			} else {
+				return list.get(0);
+			}
+		} catch (Exception e){
+			e.printStackTrace();
+		} finally {
+			if(session!=null){
+				session.close();
+			}
+		}
+		
+		return null;
 	}
 	
 	/**
@@ -309,9 +447,57 @@ public class DriverDao {
 			
 		} catch(Exception e){
 			e.printStackTrace();
-			result = new JSONObject();
-			result.put(Application.RESULT, Application.ERROR);
-			result.put(Application.ERROR_MESSAGE, e.getMessage());
+			result = SystemUtils.generateErrorMessage(e.getMessage());
+		} finally {
+			if(session!=null){
+				session.close();
+			}
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * Delete driver
+	 * @param username
+	 * @return
+	 */
+	public static JSONObject deleteDriver(String username) {
+		
+		JSONObject result = new JSONObject();
+		Session session = null;
+		try {
+			session = HibernateUtil.getSessionAnnotationFactory().openSession();
+			session.beginTransaction();
+			Criteria criteria = session.createCriteria(Driver.class);
+			criteria.add(Restrictions.eq("username", username));
+			
+			List<Driver> list = criteria.list();
+			if(list.size() <= 1){
+				if(list.size() == 0){
+					//No user found
+					result.put(Application.RESULT, Application.ERROR);
+					result.put(Application.ERROR_MESSAGE, "No driver with username " + username + " found");
+				} else {
+					Driver driverToDelete = list.get(0);
+					boolean locationRecordsUpdated = LocationDao.markDriverAsDeleted(driverToDelete);	//update rows in location table as "driver_deleted" 
+					
+					if(locationRecordsUpdated){
+						session.delete(driverToDelete);
+						session.getTransaction().commit();
+						result.put(Application.RESULT, Application.SUCCESS);
+					} else {
+						result = SystemUtils.generateErrorMessage("Failed to delete location records for driver "+driverToDelete.getUsername());
+					}
+				}
+			} else {
+				//LOG ERROR HERE ONCE LOGGER IS INTEGRATED
+				System.out.println("ERROR. MORE THAN 1 USERS WITH username :"+username+" FOUND");
+				result = SystemUtils.generateErrorMessage("More than 1 driver with username "+username + " found");
+			}
+		} catch(Exception e){
+			e.printStackTrace();
+			result = SystemUtils.generateErrorMessage(e.getMessage());
 		} finally {
 			if(session!=null){
 				session.close();

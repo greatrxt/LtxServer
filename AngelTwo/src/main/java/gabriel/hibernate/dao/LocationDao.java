@@ -20,11 +20,73 @@ import org.hibernate.Session;
 import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.query.Query;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 //http://docs.oracle.com/javaee/6/tutorial/doc/gjivm.html#gjivs
 public class LocationDao {
+	
+	/**
+	 * Replaces driver username with a driver "deleted_driver"
+	 * @param driverUserName
+	 * @return
+	 */
+	public static boolean markDriverAsDeleted(Driver driverToDelete){
+		//run raw query to void delay in case of large number of rows
+		Session session = null;
+		try {
+			session = HibernateUtil.getSessionAnnotationFactory().openSession();
+			session.beginTransaction();
+			String hql = "UPDATE Location set driver = :deleted_driver "  + 
+		             "WHERE driver = :driver";
+			Query query = session.createQuery(hql);
+			query.setParameter("deleted_driver", DriverDao.getDeletedDriver());
+			query.setParameter("driver", driverToDelete);
+			int result = query.executeUpdate();
+			System.out.println("Location ( For Driver ) rows affected: " + result);
+			session.getTransaction().commit();
+			return true;
+		} catch(Exception e){
+			e.printStackTrace();
+		} finally {
+			if(session!=null){
+				session.close();
+			}
+		}
+		return false;
+	}
+	
+	
+	/**
+	 * Replaces vehicle as deleted for location records with vehicle - vehicleToDelete
+	 * @param vehicleToDelete
+	 * @return
+	 */
+	public static boolean markVehicleAsDeleted(Vehicle vehicleToDelete){
+		//run raw query to void delay in case of large number of rows
+		Session session = null;
+		try {
+			session = HibernateUtil.getSessionAnnotationFactory().openSession();
+			session.beginTransaction();
+			String hql = "UPDATE Location set vehicle = :deleted_vehicle "  + 
+		             "WHERE vehicle = :vehicle";
+			Query query = session.createQuery(hql);
+			query.setParameter("deleted_vehicle", VehicleDao.getDeletedVehicle());
+			query.setParameter("vehicle", vehicleToDelete);
+			int result = query.executeUpdate();
+			System.out.println("Location ( for vehicle ) rows affected: " + result);
+			session.getTransaction().commit();
+			return true;
+		} catch(Exception e){
+			e.printStackTrace();
+		} finally {
+			if(session!=null){
+				session.close();
+			}
+		}
+		return false;
+	}
 	
 	/**
 	 * Get last known location for every vehicle
@@ -53,40 +115,45 @@ public class LocationDao {
 				Criteria criteria = session.createCriteria(Location.class);
 				criteria.add(Restrictions.eq("vehicle", vehicle));
 				criteria.add(Restrictions.gt("mBearing", 0.0));
+				criteria.add(Restrictions.ne("driver", DriverDao.getDeletedDriver()));
 				criteria.addOrder(Order.desc("mTime"));
 				criteria.setMaxResults(1);
 				
-				Location location = (Location) criteria.uniqueResult();
-				vehicleJson.put("uniqueId", vehicle.getUniqueId());
-				vehicleJson.put("registration", vehicle.getRegistrationNumber());
-				
-				JSONObject locationJson = new JSONObject();
-				if(location!=null){
-					locationJson.put("mBearing", location.getmBearing());
-					locationJson.put("mLatitude", location.getmLatitude());
-					locationJson.put("mLongitude", location.getmLongitude());
-					locationJson.put("mTime", location.getmTime());
-					locationJson.put("mSpeed", location.getmSpeed());
+				if(criteria.list().size() > 0){
+					Location location = (Location) criteria.uniqueResult();
+					vehicleJson.put("uniqueId", vehicle.getUniqueId());
+					vehicleJson.put("registration", vehicle.getRegistrationNumber());
+					
+					JSONObject locationJson = new JSONObject();
+					if(location!=null){
+						locationJson.put("mBearing", location.getmBearing());
+						locationJson.put("mLatitude", location.getmLatitude());
+						locationJson.put("mLongitude", location.getmLongitude());
+						locationJson.put("mTime", location.getmTime());
+						locationJson.put("mSpeed", location.getmSpeed());
+						locationJson.put("driver", location.getDriver().getUsername());
+					} else {
+						locationJson.put("bearing", -1);
+						locationJson.put("latitude", -1);
+						locationJson.put("longitude", -1);
+						locationJson.put("mTime", -1);
+						locationJson.put("mSpeed", -1);
+						locationJson.put("driver", "");
+					}
+					
+					vehicleJson.put("location", locationJson);
+					
+					vehicleArray.put(vehicleJson);
 				} else {
-					locationJson.put("bearing", -1);
-					locationJson.put("latitude", -1);
-					locationJson.put("longitude", -1);
-					locationJson.put("mTime", -1);
-					locationJson.put("mSpeed", -1);
+					
 				}
-				
-				vehicleJson.put("location", locationJson);
-				
-				vehicleArray.put(vehicleJson);
 			}
 			
 			result.put(Application.RESULT, vehicleArray);
 			
 		} catch(Exception e){
 			e.printStackTrace();
-			result = new JSONObject();
-			result.put(Application.RESULT, Application.ERROR);
-			result.put(Application.ERROR_MESSAGE, e.getMessage());
+			result = SystemUtils.generateErrorMessage(e.getMessage());
 		} finally {
 			if(session!=null){
 				session.close();
@@ -126,12 +193,14 @@ public class LocationDao {
 		Driver driver = DriverDao.getDriver(username);
 		if(vehicle == null){
 			System.out.println("Vehicle with ID "+uniqueId+" NOT found");
-			return "Vehicle with ID " + uniqueId + " NOT found";
+			//return "Vehicle with ID " + uniqueId + " NOT found";
+			vehicle = VehicleDao.getUnregisteredVehicle();
 		}
 		
 		if(driver == null){
 			System.out.println("Driver with ursername "+username + " not found");
-			return "Driver with username " + username + " NOT found";
+			//return "Driver with username " + username + " NOT found";
+			driver = DriverDao.getUnregisteredDriver();
 		}
 		
 		long saveId = -1;
@@ -262,9 +331,7 @@ public class LocationDao {
 			Vehicle vehicle = VehicleDao.getVehicle(vehicleUniqueId);
 			
 			if(vehicle==null){
-				result.put(Application.RESULT, Application.ERROR);
-				result.put(Application.ERROR_MESSAGE, "Vehicle with ID + " + vehicleUniqueId + " NOT found");
-				return result;
+				return SystemUtils.generateErrorMessage("Vehicle with uniqueID "+vehicleUniqueId+" NOT found");
 			}
 			
 			session = HibernateUtil.getSessionAnnotationFactory().openSession();
@@ -301,7 +368,8 @@ public class LocationDao {
 	        	locationJson.put("mTime", location.getmTime());
 	        	locationJson.put("mBearing", location.getmBearing());
 	        	locationJson.put("mLatitude", location.getmLatitude());
-	        	locationJson.put("mLongitude", location.getmLongitude());    
+	        	locationJson.put("mLongitude", location.getmLongitude());  
+	        	locationJson.put("driver", location.getDriver().getUsername());
 	        	
 	        	double snappedLatitude = location.getSnappedLatitude();
 	        	double snappedLongitude = location.getSnappedLongitude();
@@ -316,12 +384,15 @@ public class LocationDao {
 	        }
 	        
 	        result.put(Application.RESULT, locationArray);
-	        return result;
+		} catch(Exception e){
+			result = SystemUtils.generateErrorMessage(e.getMessage());
 		} finally {
 			if(session!=null){
 				session.close();
 			}
 		}
+		
+		return result;
 	}
 	
 }

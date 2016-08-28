@@ -72,7 +72,7 @@ public class VehicleService {
 			if(inputJson.has("image")){
 				String tempImageString = inputJson.getString("image").trim();
 				if(tempImageString.equals("1")){
-					image = "";
+					image = "1";
 				} else if (tempImageString.equals("0")){
 					image = null;
 				} else {
@@ -117,24 +117,22 @@ public class VehicleService {
 
 			JSONObject inputJson = SystemUtils.convertInputStreamToJSON(is);		
 			String missingFields = "";
-			String uniqueId = null, registrationNumber = null, image = null;
+			String uniqueId = "", registrationNumber = "", image = null;
 			
 			if(inputJson.has("uniqueId")){
 				uniqueId = inputJson.getString("uniqueId");
-				if(uniqueId.trim().isEmpty()){
-					missingFields+="uniqueId ";	
-				}
-			} else {
-				missingFields+=" uniqueId ";
+			} 
+			
+			if(uniqueId.trim().isEmpty()){
+				missingFields+="uniqueId ";	
 			}
 			
 			if(inputJson.has("registration")){
-				registrationNumber = inputJson.getString("registration");
-				if(registrationNumber.trim().isEmpty()){
-					missingFields+=" registration ";	
-				}
-			} else {
-				missingFields+="registration ";
+				registrationNumber = inputJson.getString("registration").replaceAll("[^A-Za-z0-9 ]", ""); //remove all non-alphanumber characters. Leave spaces intact
+			} 
+			
+			if(registrationNumber.trim().isEmpty()){
+				missingFields+=" registration ";	
 			}
 			
 			if(missingFields.trim().length() != 0){

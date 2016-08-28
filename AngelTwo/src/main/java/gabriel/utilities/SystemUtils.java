@@ -25,6 +25,18 @@ import gabriel.application.Application;
 public class SystemUtils {
 	
 	/**
+	 * Used to generate error message
+	 * @param errorMessage
+	 * @return
+	 */
+	public static JSONObject generateErrorMessage(String errorMessage){
+		JSONObject error = new JSONObject();
+		error.put(Application.RESULT, Application.ERROR);
+		error.put(Application.ERROR_MESSAGE, errorMessage);
+		return error;
+	}
+	
+	/**
 	 * save uploaded file to new location
 	 * @param uploadedInputStream
 	 * @param uploadedFileLocation
@@ -184,6 +196,10 @@ public class SystemUtils {
 				BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(imageBytes));
 				File imageFile = new File(imageUploadFolder.getAbsolutePath() + File.separator + driver.getString("username") + ".png");
 				
+				if(imageFile.exists()){
+					imageFile.delete();
+				}
+				
 				if(bufferedImage!=null && imageFile!=null){
 					ImageIO.write(bufferedImage, "png", imageFile);
 				}
@@ -220,6 +236,12 @@ public class SystemUtils {
 				byte[] imageBytes = javax.xml.bind.DatatypeConverter.parseBase64Binary(image);
 				BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(imageBytes));
 				File imageFile = new File(imageUploadFolder.getAbsolutePath() + File.separator + vehicle.getString("uniqueId") + ".png");
+				
+				if(imageFile.exists()){
+					imageFile.delete();
+				}
+				
+				
 				if(bufferedImage!=null && imageFile!=null){
 					ImageIO.write(bufferedImage, "png", imageFile);
 				}

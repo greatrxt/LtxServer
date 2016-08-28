@@ -14,8 +14,12 @@ import org.json.JSONObject;
 import gabriel.application.Application;
 import gabriel.hibernate.entity.Vehicle;
 import gabriel.utilities.HibernateUtil;
+import gabriel.utilities.SystemUtils;
 
 public class VehicleDao {
+	
+	public static final String UNREGISTERED_VEHICLE = "unregistered_vehicle";
+	public static final String DELETED_VEHICLE = "deleted_vehicle";
 	
 	/**
 	 * Edit existing vehicle
@@ -33,9 +37,9 @@ public class VehicleDao {
 			
 			Vehicle vehicle = getVehicle(uniqueId);
 			if(image == null){
-				vehicle.setImage("");
+				vehicle.setImage(Application.STANDARD_IMAGE_NOT_FOUND);
 			} else if(image == "1"){
-				//do nothing
+				//This means image has not been changed. Do nothing.
 			} else {
 				vehicle.setImage(image);
 			}
@@ -45,8 +49,7 @@ public class VehicleDao {
 			result.put(Application.RESULT, Application.SUCCESS);
 		} catch(Exception e){
 			e.printStackTrace();
-			result.put(Application.RESULT, Application.ERROR);
-			result.put(Application.ERROR_MESSAGE, e.getMessage());
+			result = SystemUtils.generateErrorMessage(e.getMessage());
 		} finally {
 			if(session!=null){
 				session.close();
@@ -83,8 +86,7 @@ public class VehicleDao {
 			result.put(Application.RESULT, Application.SUCCESS);
 		} catch(Exception e){
 			e.printStackTrace();
-			result.put(Application.RESULT, Application.ERROR);
-			result.put(Application.ERROR_MESSAGE, e.getMessage());
+			result = SystemUtils.generateErrorMessage(e.getMessage());
 		} finally {
 			if(session!=null){
 				session.close();
@@ -108,29 +110,34 @@ public class VehicleDao {
 			
 			Criteria criteria = session.createCriteria(Vehicle.class);
 			Disjunction or = Restrictions.disjunction();
-			or.add(Restrictions.ilike("unique_id", query));
-			or.add(Restrictions.ilike("registration_number", query));
+			or.add(Restrictions.ilike("uniqueId", "%" + query + "%"));
+			or.add(Restrictions.ilike("registrationNumber", "%" + query + "%"));
 			criteria.add(or);
+			criteria.setMaxResults(5);
 			
 			List<Vehicle> vehicles = criteria.list();
-			if(vehicles.size() == 0){
-				result.put(Application.ERROR, "No users found");
-			} else {
-				JSONArray searchArray = new JSONArray();
-				
-				Iterator<Vehicle> iterator = vehicles.iterator();
-				while(iterator.hasNext()){
-					Vehicle vehicle = iterator.next();
-					JSONObject vehicleJson = getVehicleInfo(vehicle.getUniqueId());
+
+			JSONArray searchArray = new JSONArray();
+			
+			Iterator<Vehicle> iterator = vehicles.iterator();
+			while(iterator.hasNext()){
+				Vehicle vehicle = iterator.next();
+				if(!vehicle.getUniqueId().trim().equals(UNREGISTERED_VEHICLE) 
+						&& !vehicle.getUniqueId().trim().equals(DELETED_VEHICLE)){
+					JSONObject vehicleJson = new JSONObject();
+					vehicleJson.put("registrationNumber", vehicle.getRegistrationNumber());
+					vehicleJson.put("uniqueId", vehicle.getUniqueId());
+					//vehicleInfo.put("vehicleCreationTime", vehicle.getVehicleCreationTime());
+					vehicleJson.put("image", vehicle.getImage());
 					searchArray.put(vehicleJson);
 				}
-				
-				result.put(Application.RESULT, searchArray);
 			}
+			
+			result.put(Application.RESULT, searchArray);
+			
 		} catch(Exception e){
 			e.printStackTrace();
-			result.put(Application.RESULT, Application.ERROR);
-			result.put(Application.ERROR_MESSAGE, e.getMessage());
+			result = SystemUtils.generateErrorMessage(e.getMessage());
 		} finally {
 			if(session!=null){
 				session.close();
@@ -138,6 +145,68 @@ public class VehicleDao {
 		}
 		
 		return result;
+	}
+	
+	
+	/**
+	 * For location records with deleted drivers.
+	 * @param uniqueId
+	 * @return
+	 */
+	public static Vehicle getDeletedVehicle(){
+		Session session = null;
+		try {
+			
+			session = HibernateUtil.getSessionAnnotationFactory().openSession();
+			Criteria criteria = session.createCriteria(Vehicle.class);
+			criteria.add(Restrictions.eq("uniqueId", DELETED_VEHICLE));
+			List<Vehicle> list = criteria.list();
+			
+			if(list.size() == 0){
+				storeVehicleInfo(DELETED_VEHICLE, Application.STANDARD_IMAGE_NOT_FOUND, DELETED_VEHICLE);
+				return getDeletedVehicle();
+			} else {
+				return list.iterator().next();
+			}			
+		} catch(Exception e){
+			e.printStackTrace();
+		} finally {
+			if(session!=null){
+				session.close();
+			}
+		}
+		return null;
+	}
+	
+	
+	/**
+	 * For location records without vehicle uniqueID
+	 * @param uniqueId
+	 * @return
+	 */
+	public static Vehicle getUnregisteredVehicle(){
+		Session session = null;
+		try {
+			
+			session = HibernateUtil.getSessionAnnotationFactory().openSession();
+			Criteria criteria = session.createCriteria(Vehicle.class);
+			criteria.add(Restrictions.eq("uniqueId", UNREGISTERED_VEHICLE));
+			List<Vehicle> list = criteria.list();
+			
+			if(list.size() == 0){
+				storeVehicleInfo(UNREGISTERED_VEHICLE, Application.STANDARD_IMAGE_NOT_FOUND, UNREGISTERED_VEHICLE);
+				return getUnregisteredVehicle();
+			} else {
+				return list.iterator().next();
+			}			
+		} catch(Exception e){
+			e.printStackTrace();
+		} finally {
+			if(session!=null){
+				session.close();
+			}
+		}
+		return null;
 	}
 	
 	/**
@@ -214,8 +283,7 @@ public class VehicleDao {
 			}
 		} catch(Exception e){
 			e.printStackTrace();
-			result.put(Application.RESULT, Application.ERROR);
-			result.put(Application.ERROR, e.getMessage());
+			result = SystemUtils.generateErrorMessage(e.getMessage());
 		} finally {
 			if(session!=null){
 				session.close();
@@ -237,6 +305,7 @@ public class VehicleDao {
 			session = HibernateUtil.getSessionAnnotationFactory().openSession();
 			
 			Criteria criteria = session.createCriteria(Vehicle.class);
+			criteria.add(Restrictions.ne("uniqueId", "deleted_vehicle"));
 			List<Vehicle> list = criteria.list();
 			return list;
 		} catch(Exception e){
@@ -276,18 +345,20 @@ public class VehicleDao {
 					while(vehicleList.hasNext()){
 						Vehicle vehicle = vehicleList.next();
 						JSONObject vehicleJson = new JSONObject();
-						vehicleJson.put("registrationNumber", vehicle.getRegistrationNumber());
-						vehicleJson.put("uniqueId", vehicle.getUniqueId());
-						//vehicleInfo.put("vehicleCreationTime", vehicle.getVehicleCreationTime());
-						vehicleJson.put("image", vehicle.getImage());
-						vehiclesArray.put(vehicleJson);
+						if(!vehicle.getUniqueId().trim().equals(UNREGISTERED_VEHICLE) 
+								&& !vehicle.getUniqueId().trim().equals(DELETED_VEHICLE)){
+							vehicleJson.put("registrationNumber", vehicle.getRegistrationNumber());
+							vehicleJson.put("uniqueId", vehicle.getUniqueId());
+							//vehicleInfo.put("vehicleCreationTime", vehicle.getVehicleCreationTime());
+							vehicleJson.put("image", vehicle.getImage());
+							vehiclesArray.put(vehicleJson);
+						}
 					}
 					result.put(Application.RESULT, vehiclesArray);
 				}
 		} catch(Exception e){
 			e.printStackTrace();
-			result.put(Application.RESULT, Application.ERROR);
-			result.put(Application.ERROR, e.getMessage());
+			result = SystemUtils.generateErrorMessage(e.getMessage());
 		} finally {
 			if(session!=null){
 				session.close();
@@ -319,22 +390,26 @@ public class VehicleDao {
 					result.put(Application.RESULT, Application.ERROR);
 					result.put(Application.ERROR_MESSAGE, "No vehicle with uniqueId " + uniqueId + " found");
 				} else {
-					Iterator<Vehicle> vehicleList = list.iterator();
-					while(vehicleList.hasNext()){
-						Vehicle vehicle = vehicleList.next();
-						session.delete(vehicle);
+
+					Vehicle vehicle = list.get(0);
+					boolean locationRecordsUpdated = LocationDao.markVehicleAsDeleted(vehicle);
+					
+					if(locationRecordsUpdated){
+						session.delete(vehicle);						
+						session.getTransaction().commit();
+						result.put(Application.RESULT, Application.SUCCESS);
+					} else {
+						result = SystemUtils.generateErrorMessage("Failed to delete associated location records for vehicle " + vehicle.getRegistrationNumber());
 					}
-					session.getTransaction().commit();
-					result.put(Application.RESULT, Application.SUCCESS);
 				}
 			} else {
 				//LOG ERROR HERE ONCE LOGGER IS INTEGRATED
-				System.out.println("ERROR. MORE THAN 1 USERS WITH uniqueId :"+uniqueId+" FOUND");
+				System.out.println("More than 1 vehicles with unique ID "+uniqueId + " found");
+				result = SystemUtils.generateErrorMessage("More than 1 vehicles with unique ID "+uniqueId + " found");
 			}
 		} catch(Exception e){
 			e.printStackTrace();
-			result.put(Application.RESULT, Application.ERROR);
-			result.put(Application.ERROR_MESSAGE, e.getMessage());
+			result = SystemUtils.generateErrorMessage(e.getMessage());
 		} finally {
 			if(session!=null){
 				session.close();
