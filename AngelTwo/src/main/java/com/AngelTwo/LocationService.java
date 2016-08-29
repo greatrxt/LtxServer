@@ -9,6 +9,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -27,11 +28,17 @@ import org.json.JSONObject;
 public class LocationService {
 
 	@GET
-    @Produces(MediaType.TEXT_PLAIN)
-    public Response getLastKnownStatusOfAllVehicles() {
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getLastKnownStatusOfAllVehicles(@Context HttpServletRequest request) {
+		
+		if(!Application.sessionIsValid(request)){
+			return Response.status(Response.Status.BAD_REQUEST)
+					.entity(Application.getTeamNameForSession(request).toString()).build();
+		}
+		
 		JSONObject result;
 		try {
-			result = LocationDao.getLastKnownLocationForAllVehicles();
+			result = LocationDao.getLastKnownLocationForAllVehicles(Application.getTeam(request));
 		} catch (Exception e) {
 			result = new JSONObject();
 			result.put(Application.RESULT, Application.ERROR);
@@ -46,11 +53,18 @@ public class LocationService {
     @Path("/vehicle/{id}/{fromDate}/{toDate}")
     @Produces(MediaType.APPLICATION_JSON)
     @GET
-    public Response getVehicleStatus(@PathParam("id") String uniqueId, @PathParam("fromDate") String fromDate, @PathParam("toDate") String toDate){
+    public Response getVehicleStatus(@Context HttpServletRequest request, 
+    		@PathParam("id") String uniqueId, @PathParam("fromDate") String fromDate, @PathParam("toDate") String toDate){
+    	
+		if(!Application.sessionIsValid(request)){
+			return Response.status(Response.Status.BAD_REQUEST)
+					.entity(Application.getTeamNameForSession(request).toString()).build();
+		}
+		
     	SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
     	JSONObject result;
 		try {
-			result = LocationDao.getLocationJsonForVehicle(uniqueId, sdf.parse(fromDate.trim()), sdf.parse(toDate.trim()));
+			result = LocationDao.getLocationJsonForVehicle(Application.getTeam(request), uniqueId, sdf.parse(fromDate.trim()), sdf.parse(toDate.trim()));
 		} catch (Exception e) {
 			result = new JSONObject();
 			result.put(Application.RESULT, Application.ERROR);
@@ -65,7 +79,13 @@ public class LocationService {
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response uploadLocationPacket(InputStream is, @Context ServletContext servletContext){
+	public Response uploadLocationPacket(@Context HttpServletRequest request, 
+			InputStream is, @Context ServletContext servletContext){
+		
+		if(!Application.sessionIsValid(request)){
+			return Response.status(Response.Status.BAD_REQUEST)
+					.entity(Application.getTeamNameForSession(request).toString()).build();
+		}
 		
 		JSONObject inputStreamJSON = SystemUtils.convertInputStreamToJSON(is);
 		if (inputStreamJSON != null) {
@@ -91,7 +111,7 @@ public class LocationService {
 				String username = inputStreamJSON.getString("username");
 				String rawPacket = inputStreamJSON.toString();
 				
-				String result = LocationDao.storeLocationPacket(mLatitude, mLongitude, mAccuracy, mSpeed, mDistance, 
+				String result = LocationDao.storeLocationPacket(Application.getTeam(request), mLatitude, mLongitude, mAccuracy, mSpeed, mDistance, 
 						mAltitude, mTime, mBearing, signalStrength, batteryCharge, uniqueId, username, rawPacket);
 
 				if(!result.trim().equals(Application.SUCCESS)){

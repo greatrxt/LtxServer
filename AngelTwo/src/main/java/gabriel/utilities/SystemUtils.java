@@ -167,13 +167,15 @@ public class SystemUtils {
 	 * @param result
 	 * @throws IOException
 	 */
-	public static void createDriverImageInTempCache(ServletContext context, JSONObject result) throws IOException {
+	public static void createUserImageInTempCache(String team, ServletContext context, JSONObject result) throws IOException {
 		if(!result.get("result").toString().trim().equals(Application.ERROR)){
 			//Create a copy of image on server that can be accessed from the web client
 			String contextPath = context.getContextPath();
 			String contextRealPath = context.getRealPath(contextPath);
-			System.out.println(context.getRealPath(contextRealPath));
-			String imagePath = contextRealPath + File.separator + Application.FOLDER_UPLOADS + File.separator + Application.FOLDER_DRIVER_IMAGES; 
+			
+			contextRealPath = contextRealPath.replace("\\AngelTwo\\AngelTwo", "") + File.separator + "\\ROOT\\AngelTwoTempCache";
+			
+			String imagePath = contextRealPath + File.separator + team + File.separator + Application.FOLDER_UPLOADS + File.separator + Application.FOLDER_USER_IMAGES; 
 			File imageUploadFolder = new File(imagePath);
 			
 			if(!imageUploadFolder.exists()){
@@ -202,19 +204,24 @@ public class SystemUtils {
 				
 				if(bufferedImage!=null && imageFile!=null){
 					ImageIO.write(bufferedImage, "png", imageFile);
+					driver.put("image", imageFile.getAbsolutePath().split("ROOT")[1]);
 				}
 			}	
 		}
 		
 	}
 	
-	public static void createVehicleImageInTempCache(ServletContext context, JSONObject result) throws IOException {
+	public static void createVehicleImageInTempCache(String team, ServletContext context, JSONObject result) throws IOException {
 		if(!result.get("result").toString().trim().equals(Application.ERROR)){
 			//Create a copy of image on server that can be accessed from the web client
 			String contextPath = context.getContextPath();
 			String contextRealPath = context.getRealPath(contextPath);
+			
+			contextRealPath = contextRealPath.replace("\\AngelTwo\\AngelTwo", "") + File.separator + "\\ROOT\\AngelTwoTempCache";
+
+			
 			System.out.println(context.getRealPath(contextRealPath));
-			String imagePath = contextRealPath + File.separator + Application.FOLDER_UPLOADS + File.separator + Application.FOLDER_VEHICLE_IMAGES; 
+			String imagePath = contextRealPath + File.separator + team + File.separator + Application.FOLDER_UPLOADS + File.separator + Application.FOLDER_VEHICLE_IMAGES; 
 			File imageUploadFolder = new File(imagePath);
 			
 			if(!imageUploadFolder.exists()){
@@ -244,6 +251,7 @@ public class SystemUtils {
 				
 				if(bufferedImage!=null && imageFile!=null){
 					ImageIO.write(bufferedImage, "png", imageFile);
+					vehicle.put("image", imageFile.getAbsolutePath().split("ROOT")[1]);
 				}
 			}	
 		}

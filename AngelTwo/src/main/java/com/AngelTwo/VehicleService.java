@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -26,7 +27,12 @@ public class VehicleService {
 	
 	@PUT
 	@Produces(MediaType.APPLICATION_JSON)
-	public static Response editVehicle(InputStream is, @Context ServletContext context){
+	public static Response editVehicle(@Context HttpServletRequest request, InputStream is, @Context ServletContext context){
+		
+		if(!Application.sessionIsValid(request)){
+			return Response.status(Response.Status.BAD_REQUEST)
+					.entity(Application.getTeamNameForSession(request).toString()).build();
+		}
 		
 		JSONObject result = new JSONObject();
 		try {
@@ -82,7 +88,7 @@ public class VehicleService {
 				image = Application.STANDARD_IMAGE_NOT_FOUND.split(",")[1];
 			}
 			
-			result = VehicleDao.editVehicle(uniqueId, image, registrationNumber);
+			result = VehicleDao.editVehicle(Application.getTeam(request), uniqueId, image, registrationNumber);
 			
 			if(result.getString(Application.RESULT).equals(Application.SUCCESS)){
 				return Response.status(Response.Status.OK).entity(result.toString()).build();	
@@ -101,8 +107,13 @@ public class VehicleService {
 
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
-	public static Response createVehicle(InputStream is, @Context ServletContext context){
+	public static Response createVehicle(@Context HttpServletRequest request, InputStream is, @Context ServletContext context){
 	
+		if(!Application.sessionIsValid(request)){
+			return Response.status(Response.Status.BAD_REQUEST)
+					.entity(Application.getTeamNameForSession(request).toString()).build();
+		}
+		
 		JSONObject result = new JSONObject();
 		try {
 			String contextPath = context.getContextPath();
@@ -153,7 +164,7 @@ public class VehicleService {
 				image = Application.STANDARD_IMAGE_NOT_FOUND.split(",")[1];
 			}
 			
-			result = VehicleDao.storeVehicleInfo(uniqueId, image, registrationNumber);
+			result = VehicleDao.storeVehicleInfo(Application.getTeam(request), uniqueId, image, registrationNumber);
 			
 			if(result.getString(Application.RESULT).equals(Application.SUCCESS)){
 				return Response.status(Response.Status.CREATED).entity(result.toString()).build();	
@@ -173,13 +184,18 @@ public class VehicleService {
 	
 	@Produces(MediaType.APPLICATION_JSON)
 	@GET
-	public static Response getAllVehicles(@Context ServletContext context){
+	public static Response getAllVehicles(@Context HttpServletRequest request, @Context ServletContext context){
+		
+		if(!Application.sessionIsValid(request)){
+			return Response.status(Response.Status.BAD_REQUEST)
+					.entity(Application.getTeamNameForSession(request).toString()).build();
+		}
 		
 		JSONObject result = null;
 		
 		try {
-			result = VehicleDao.getAllVehicles();
-			SystemUtils.createVehicleImageInTempCache(context, result);			
+			result = VehicleDao.getAllVehicles(Application.getTeam(request));
+			SystemUtils.createVehicleImageInTempCache(Application.getTeam(request), context, result);			
 			return Response.status(Response.Status.OK).entity(result.toString()).build();
 			
 		} catch(Exception e){
@@ -194,10 +210,16 @@ public class VehicleService {
 	@Path("/{uniqueId}")
 	@Produces(MediaType.APPLICATION_JSON)
 	@DELETE
-	public static Response deleteVehicle(@Context ServletContext context, @PathParam("uniqueId") String uniqueId){
+	public static Response deleteVehicle(@Context HttpServletRequest request, @Context ServletContext context, @PathParam("uniqueId") String uniqueId){
+		
+		if(!Application.sessionIsValid(request)){
+			return Response.status(Response.Status.BAD_REQUEST)
+					.entity(Application.getTeamNameForSession(request).toString()).build();
+		}
+		
 		JSONObject result = null;
 		try {
-			result = VehicleDao.deleteVehicle(String.valueOf(uniqueId));
+			result = VehicleDao.deleteVehicle(Application.getTeam(request), String.valueOf(uniqueId));
 			return Response.status(Response.Status.OK).entity(result.toString()).build();
 		} catch (Exception e) {
 			result = new JSONObject();
@@ -210,11 +232,17 @@ public class VehicleService {
 	@Path("/{uniqueId}")
 	@Produces(MediaType.APPLICATION_JSON)
 	@GET
-	public static Response getVehicleInfo(@Context ServletContext context, @PathParam("uniqueId") String uniqueId){
+	public static Response getVehicleInfo(@Context HttpServletRequest request, @Context ServletContext context, @PathParam("uniqueId") String uniqueId){
+		
+		if(!Application.sessionIsValid(request)){
+			return Response.status(Response.Status.BAD_REQUEST)
+					.entity(Application.getTeamNameForSession(request).toString()).build();
+		}
+		
 		JSONObject result = null;
 		try {
-			result = VehicleDao.getVehicleInfo(String.valueOf(uniqueId));
-			SystemUtils.createVehicleImageInTempCache(context, result);
+			result = VehicleDao.getVehicleInfo(Application.getTeam(request), String.valueOf(uniqueId));
+			SystemUtils.createVehicleImageInTempCache(Application.getTeam(request), context, result);
 			return Response.status(Response.Status.OK).entity(result.toString()).build();
 		} catch (Exception e) {
 			result = new JSONObject();

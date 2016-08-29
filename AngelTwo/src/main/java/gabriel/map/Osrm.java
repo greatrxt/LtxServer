@@ -26,13 +26,13 @@ public class Osrm {
 	/**
 	 * Adds snapped lat lon value to location table
 	 */
-	public static void snapLocation(final long recordId){
+	public static void snapLocation(final String team, final long recordId){
 		new Thread(new Runnable() {
 //		new Timer().schedule(
 	//	new TimerTask() {
 			@Override
 			public void run() {
-				addToQueue(recordId);
+				addToQueue(team, recordId);
 				/*
 				Session session = null;
 				try {
@@ -84,11 +84,11 @@ public class Osrm {
 	 * 
 	 * @param recordId
 	 */
-	public synchronized static void addToQueue(long recordId){
+	public synchronized static void addToQueue(String team, long recordId){
 
 			Session session = null;
 			try {
-				session = HibernateUtil.getSessionAnnotationFactory().openSession();
+				session = HibernateUtil.getSessionAnnotationFactoryFor(team).openSession();
 				session.beginTransaction();
 			
 				Location location = (Location) session.get(Location.class, recordId);

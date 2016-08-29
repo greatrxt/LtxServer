@@ -28,14 +28,14 @@ public class VehicleDao {
 	 * @param registrationNumber
 	 * @return
 	 */
-	public static JSONObject editVehicle(String uniqueId, String image, String registrationNumber){
+	public static JSONObject editVehicle(String team, String uniqueId, String image, String registrationNumber){
 		JSONObject result = new JSONObject();
 		Session session = null;
 		try {
-			session = HibernateUtil.getSessionAnnotationFactory().openSession();
+			session = HibernateUtil.getSessionAnnotationFactoryFor(team).openSession();
 			session.beginTransaction();
 			
-			Vehicle vehicle = getVehicle(uniqueId);
+			Vehicle vehicle = getVehicle(team, uniqueId);
 			if(image == null){
 				vehicle.setImage(Application.STANDARD_IMAGE_NOT_FOUND);
 			} else if(image == "1"){
@@ -69,11 +69,11 @@ public class VehicleDao {
 	 * @param image
 	 * @return
 	 */
-	public static JSONObject storeVehicleInfo(String uniqueId, String image, String registrationNumber){
+	public static JSONObject storeVehicleInfo(String team, String uniqueId, String image, String registrationNumber){
 		JSONObject result = new JSONObject();
 		Session session = null;
 		try {
-			session = HibernateUtil.getSessionAnnotationFactory().openSession();
+			session = HibernateUtil.getSessionAnnotationFactoryFor(team).openSession();
 			session.beginTransaction();
 			
 			Vehicle vehicle = new Vehicle();
@@ -101,11 +101,11 @@ public class VehicleDao {
 	 * @param query
 	 * @return
 	 */
-	public static JSONObject searchVehiclesFor(String query){
+	public static JSONObject searchVehiclesFor(String team, String query){
 		JSONObject result = new JSONObject();
 		Session session = null;
 		try {
-			session = HibernateUtil.getSessionAnnotationFactory().openSession();
+			session = HibernateUtil.getSessionAnnotationFactoryFor(team).openSession();
 			session.beginTransaction();
 			
 			Criteria criteria = session.createCriteria(Vehicle.class);
@@ -153,18 +153,18 @@ public class VehicleDao {
 	 * @param uniqueId
 	 * @return
 	 */
-	public static Vehicle getDeletedVehicle(){
+	public static Vehicle getDeletedVehicle(String team){
 		Session session = null;
 		try {
 			
-			session = HibernateUtil.getSessionAnnotationFactory().openSession();
+			session = HibernateUtil.getSessionAnnotationFactoryFor(team).openSession();
 			Criteria criteria = session.createCriteria(Vehicle.class);
 			criteria.add(Restrictions.eq("uniqueId", DELETED_VEHICLE));
 			List<Vehicle> list = criteria.list();
 			
 			if(list.size() == 0){
-				storeVehicleInfo(DELETED_VEHICLE, Application.STANDARD_IMAGE_NOT_FOUND, DELETED_VEHICLE);
-				return getDeletedVehicle();
+				storeVehicleInfo(team, DELETED_VEHICLE, Application.STANDARD_IMAGE_NOT_FOUND, DELETED_VEHICLE);
+				return getDeletedVehicle(team);
 			} else {
 				return list.iterator().next();
 			}			
@@ -184,18 +184,18 @@ public class VehicleDao {
 	 * @param uniqueId
 	 * @return
 	 */
-	public static Vehicle getUnregisteredVehicle(){
+	public static Vehicle getUnregisteredVehicle(String team){
 		Session session = null;
 		try {
 			
-			session = HibernateUtil.getSessionAnnotationFactory().openSession();
+			session = HibernateUtil.getSessionAnnotationFactoryFor(team).openSession();
 			Criteria criteria = session.createCriteria(Vehicle.class);
 			criteria.add(Restrictions.eq("uniqueId", UNREGISTERED_VEHICLE));
 			List<Vehicle> list = criteria.list();
 			
 			if(list.size() == 0){
-				storeVehicleInfo(UNREGISTERED_VEHICLE, Application.STANDARD_IMAGE_NOT_FOUND, UNREGISTERED_VEHICLE);
-				return getUnregisteredVehicle();
+				storeVehicleInfo(team, UNREGISTERED_VEHICLE, Application.STANDARD_IMAGE_NOT_FOUND, UNREGISTERED_VEHICLE);
+				return getUnregisteredVehicle(team);
 			} else {
 				return list.iterator().next();
 			}			
@@ -214,10 +214,10 @@ public class VehicleDao {
 	 * @param uniqueId
 	 * @return
 	 */
-	public static Vehicle getVehicle(String uniqueId){
+	public static Vehicle getVehicle(String team, String uniqueId){
 		Session session = null;
 		try {
-			session = HibernateUtil.getSessionAnnotationFactory().openSession();
+			session = HibernateUtil.getSessionAnnotationFactoryFor(team).openSession();
 			Criteria criteria = session.createCriteria(Vehicle.class);
 			criteria.add(Restrictions.eq("uniqueId", uniqueId));
 			List<Vehicle> list = criteria.list();
@@ -247,12 +247,12 @@ public class VehicleDao {
 	 * @param uniqueId
 	 * @return
 	 */
-	public static JSONObject getVehicleInfo(String uniqueId){
+	public static JSONObject getVehicleInfo(String team, String uniqueId){
 	
 		JSONObject result = new JSONObject();
 		Session session = null;
 		try {
-			session = HibernateUtil.getSessionAnnotationFactory().openSession();
+			session = HibernateUtil.getSessionAnnotationFactoryFor(team).openSession();
 			
 			Criteria criteria = session.createCriteria(Vehicle.class);
 			criteria.add(Restrictions.eq("uniqueId", uniqueId));
@@ -298,11 +298,11 @@ public class VehicleDao {
 	 * @param uniqueId
 	 * @return
 	 */
-	public static List<Vehicle> getAllVehiclesList(){
+	public static List<Vehicle> getAllVehiclesList(String team){
 
 		Session session = null;
 		try {
-			session = HibernateUtil.getSessionAnnotationFactory().openSession();
+			session = HibernateUtil.getSessionAnnotationFactoryFor(team).openSession();
 			
 			Criteria criteria = session.createCriteria(Vehicle.class);
 			criteria.add(Restrictions.ne("uniqueId", "deleted_vehicle"));
@@ -325,12 +325,12 @@ public class VehicleDao {
 	 * @param uniqueId
 	 * @return
 	 */
-	public static JSONObject getAllVehicles(){
+	public static JSONObject getAllVehicles(String team){
 	
 		JSONObject result = new JSONObject();
 		Session session = null;
 		try {
-			session = HibernateUtil.getSessionAnnotationFactory().openSession();
+			session = HibernateUtil.getSessionAnnotationFactoryFor(team).openSession();
 			
 			Criteria criteria = session.createCriteria(Vehicle.class);
 			List<Vehicle> list = criteria.list();
@@ -373,12 +373,12 @@ public class VehicleDao {
 	 * @param uniqueId
 	 * @return
 	 */
-	public static JSONObject deleteVehicle(String uniqueId) {
+	public static JSONObject deleteVehicle(String team, String uniqueId) {
 		
 		JSONObject result = new JSONObject();
 		Session session = null;
 		try {
-			session = HibernateUtil.getSessionAnnotationFactory().openSession();
+			session = HibernateUtil.getSessionAnnotationFactoryFor(team).openSession();
 			session.beginTransaction();
 			Criteria criteria = session.createCriteria(Vehicle.class);
 			criteria.add(Restrictions.eq("uniqueId", uniqueId));
@@ -392,7 +392,7 @@ public class VehicleDao {
 				} else {
 
 					Vehicle vehicle = list.get(0);
-					boolean locationRecordsUpdated = LocationDao.markVehicleAsDeleted(vehicle);
+					boolean locationRecordsUpdated = LocationDao.markVehicleAsDeleted(team, vehicle);
 					
 					if(locationRecordsUpdated){
 						session.delete(vehicle);						

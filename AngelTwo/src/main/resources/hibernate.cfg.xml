@@ -11,7 +11,7 @@
         <property name="hibernate.connection.url">jdbc:postgresql://localhost:5432/LocTrack</property>
         <property name="hibernate.connection.username">postgres</property>
         <property name="hibernate.connection.password">admin</property>
- 
+ 		<property name="hibernate.hbm2ddl.auto">update</property>
         <!-- SQL dialect -->
         <property name="hibernate.dialect">org.hibernate.dialect.PostgreSQLDialect</property>
          <property name="hibernate.hbm2ddl.auto">update</property>

@@ -12,17 +12,16 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import gabriel.application.Application;
-import gabriel.hibernate.entity.Driver;
+import gabriel.hibernate.entity.User;
 import gabriel.utilities.HibernateUtil;
 import gabriel.utilities.SystemUtils;
 
-public class DriverDao {
+public class UserDao {
 	
-	public static final String UNREGISTERED_DRIVER = "unregistered_driver";
-	public static final String DELETED_DRIVER = "deleted_driver";
+	public static final String DELETED_USER = "deleted_user";
 	
 	/**
-	 * Edit driver information in DB
+	 * Edit user information in DB
 	 * @param username
 	 * @param name
 	 * @param contactNumber
@@ -31,7 +30,7 @@ public class DriverDao {
 	 * @param image
 	 * @return
 	 */
-	public static JSONObject editDriverInfo(String team, String username, String name, String contactNumber, Date dateOfJoining, String password, String image){
+	public static JSONObject editUserInfo(String team, String username, String name, String contactNumber, String password, String image){
 		
 		Session session = null;
 		
@@ -39,7 +38,7 @@ public class DriverDao {
 		
 		try {
 			
-			if(getDriver(team, username) == null){
+			if(getUser(team, username) == null){
 				result.put(Application.RESULT, Application.ERROR);
 				result.put(Application.ERROR_MESSAGE, "Username " + username + " does not exist");
 			} else {
@@ -47,23 +46,22 @@ public class DriverDao {
 				session = HibernateUtil.getSessionAnnotationFactoryFor(team).openSession();
 				session.beginTransaction();
 				
-				Driver driver = getDriver(team, username);
-				driver.setName(name);
-				driver.setContactNumber(contactNumber);
-				driver.setDateOfJoining(dateOfJoining);
+				User user = getUser(team, username);
+				user.setName(name);
+				user.setContactNumber(contactNumber);
 				if(!password.isEmpty()){
-					driver.setPassword(password);
+					user.setPassword(password);
 				}
 				if(image == null){
-					driver.setImage(Application.STANDARD_IMAGE_NOT_FOUND);
+					user.setImage(Application.STANDARD_IMAGE_NOT_FOUND);
 				} else {
 					if(!image.trim().isEmpty()){
-						driver.setImage(image);	
+						user.setImage(image);	
 					}
 				}
-				driver.setRecordCreationTime(new Date());	
+				user.setRecordCreationTime(new Date());	
 				
-				session.update(driver);		
+				session.update(user);		
 				
 				session.getTransaction().commit();		
 				
@@ -84,7 +82,7 @@ public class DriverDao {
 	}
 	
 	/**
-	 * Store driver information in DB
+	 * Store user information in DB
 	 * @param username
 	 * @param name
 	 * @param contactNumber
@@ -93,7 +91,7 @@ public class DriverDao {
 	 * @param image
 	 * @return
 	 */
-	public static JSONObject storeDriverInfo(String team, String username, String name, String contactNumber, Date dateOfJoining, String password, String image){
+	public static JSONObject storeUserInfo(String team, String username, String name, String contactNumber, String password, String image){
 		
 		Session session = null;
 		
@@ -101,7 +99,7 @@ public class DriverDao {
 		
 		try {
 			
-			if(getDriverInfo(team, username).has("username")){
+			if(getUserInfo(team, username).has("username")){
 				result.put(Application.RESULT, Application.ERROR);
 				result.put(Application.ERROR_MESSAGE, "Username " + username + " already exists");
 			} else {
@@ -109,16 +107,15 @@ public class DriverDao {
 				session = HibernateUtil.getSessionAnnotationFactoryFor(team).openSession();
 				session.beginTransaction();
 				
-				Driver driver = new Driver();
-				driver.setUsername(username);
-				driver.setName(name);
-				driver.setContactNumber(contactNumber);
-				driver.setDateOfJoining(dateOfJoining);
-				driver.setPassword(password);
-				driver.setImage(image);
-				driver.setRecordCreationTime(new Date());	
+				User user = new User();
+				user.setUsername(username);
+				user.setName(name);
+				user.setContactNumber(contactNumber);
+				user.setPassword(password);
+				user.setImage(image);
+				user.setRecordCreationTime(new Date());	
 				
-				session.save(driver);		
+				session.save(user);		
 				
 				session.getTransaction().commit();		
 				
@@ -143,14 +140,14 @@ public class DriverDao {
 	 * @param query
 	 * @return
 	 */
-	public static JSONObject searchDriversFor(String team, String query){
+	public static JSONObject searchUsersFor(String team, String query){
 		JSONObject result = new JSONObject();
 		Session session = null;
 		try {
 			session = HibernateUtil.getSessionAnnotationFactoryFor(team).openSession();
 			session.beginTransaction();
 			
-			Criteria criteria = session.createCriteria(Driver.class);
+			Criteria criteria = session.createCriteria(User.class);
 			Disjunction or = Restrictions.disjunction();
 			or.add(Restrictions.ilike("username", "%" + query +"%"));
 			or.add(Restrictions.ilike("name", "%" + query + "%"));
@@ -158,24 +155,22 @@ public class DriverDao {
 			criteria.add(or);
 			criteria.setMaxResults(5);
 			
-			List<Driver> drivers = criteria.list();
+			List<User> users = criteria.list();
 
 			JSONArray searchArray = new JSONArray();
 			
-			Iterator<Driver> iterator = drivers.iterator();
+			Iterator<User> iterator = users.iterator();
 			while(iterator.hasNext()){
-				Driver driver = iterator.next();
+				User user = iterator.next();
 				
-				if(!driver.getUsername().trim().equals(UNREGISTERED_DRIVER) 
-						&& !driver.getUsername().trim().equals(DELETED_DRIVER)){
-					JSONObject driverJson = new JSONObject();
-					driverJson.put("name", driver.getName());
-					driverJson.put("username", driver.getUsername());
-					driverJson.put("contactNumber", driver.getContactNumber());
-					driverJson.put("recordCreationTime", driver.getRecordCreationTime());
-					driverJson.put("dateOfJoining", driver.getDateOfJoining());
-					driverJson.put("image", driver.getImage());
-					searchArray.put(driverJson);
+				if(!user.getUsername().trim().equals(DELETED_USER)){
+					JSONObject userJson = new JSONObject();
+					userJson.put("name", user.getName());
+					userJson.put("username", user.getUsername());
+					userJson.put("contactNumber", user.getContactNumber());
+					userJson.put("recordCreationTime", user.getRecordCreationTime());
+					userJson.put("image", user.getImage());
+					searchArray.put(userJson);
 				}
 			}
 			
@@ -198,15 +193,15 @@ public class DriverDao {
 	 * 
 	 * @return
 	 */
-	public static List<Driver> getAllDriversList(String team){
+	public static List<User> getAllUsersList(String team){
 		
 		Session session = null;
 		try {
 			session = HibernateUtil.getSessionAnnotationFactoryFor(team).openSession();
 			session.beginTransaction();
 			
-			Criteria criteria = session.createCriteria(Driver.class);			
-			List<Driver> list = criteria.list();
+			Criteria criteria = session.createCriteria(User.class);			
+			List<User> list = criteria.list();
 			return list;
 			
 		} catch(Exception e){
@@ -222,10 +217,10 @@ public class DriverDao {
 	
 	/**
 	 * 
-	 * @param company 
+	 * @param team 
 	 * @return
 	 */
-	public static JSONObject getAllDrivers(String team){
+	public static JSONObject getAllUsers(String team){
 		
 		JSONObject resultsJson = new JSONObject();
 		JSONArray resultArray = new JSONArray();
@@ -234,26 +229,25 @@ public class DriverDao {
 			session = HibernateUtil.getSessionAnnotationFactoryFor(team).openSession();
 			session.beginTransaction();
 			
-			Criteria criteria = session.createCriteria(Driver.class);			
-			List<Driver> list = criteria.list();
+			Criteria criteria = session.createCriteria(User.class);			
+			List<User> list = criteria.list();
 
 			if(list.size() == 0){
 				//No user found
 				resultsJson.put(Application.RESULT, Application.ERROR);
-				resultsJson.put(Application.ERROR_MESSAGE, "No drivers found");
+				resultsJson.put(Application.ERROR_MESSAGE, "No users found");
 			} else {
-				Iterator<Driver> driverList = list.iterator();
-				while(driverList.hasNext()){
-					Driver driver = driverList.next();
+				Iterator<User> userList = list.iterator();
+				while(userList.hasNext()){
+					User user = userList.next();
 					JSONObject result = new JSONObject();
-					if(!driver.getUsername().trim().equals(UNREGISTERED_DRIVER) 
-							&& !driver.getUsername().trim().equals(DELETED_DRIVER)){
-						result.put("name", driver.getName());
-						result.put("username", driver.getUsername());
-						result.put("contactNumber", driver.getContactNumber());
-						//result.put("recordCreationTime", driver.getRecordCreationTime());
-						//result.put("dateOfJoining", driver.getDateOfJoining());
-						result.put("image", driver.getImage());
+					if(!user.getUsername().trim().equals(DELETED_USER)){
+						result.put("name", user.getName());
+						result.put("username", user.getUsername());
+						result.put("contactNumber", user.getContactNumber());
+						//result.put("recordCreationTime", user.getRecordCreationTime());
+						//result.put("dateOfJoining", user.getDateOfJoining());
+						result.put("image", user.getImage());
 						resultArray.put(result);
 					}
 				}
@@ -278,7 +272,7 @@ public class DriverDao {
 	 * @param password
 	 * @return
 	 */
-	public static JSONObject driverExists(String team, String username, String password){
+	public static JSONObject userExists(String team, String username, String password){
 		JSONObject result = new JSONObject();
 		Session session = null;
 		try {
@@ -286,10 +280,10 @@ public class DriverDao {
 			session = HibernateUtil.getSessionAnnotationFactoryFor(team).openSession();
 			session.beginTransaction();
 			
-			Criteria criteria = session.createCriteria(Driver.class);
+			Criteria criteria = session.createCriteria(User.class);
 			criteria.add(Restrictions.eq("username", username));
 			criteria.add(Restrictions.eq("password", password));
-			List<Driver> list = criteria.list();
+			List<User> list = criteria.list();
 			if(list.size() == 1){
 				result.put(Application.RESULT, Application.SUCCESS);
 			} else {
@@ -309,22 +303,22 @@ public class DriverDao {
 	
 	/**
 	 * 
-	 * @return unregistered driver
+	 * @return unregistered user
 	 */
-	public static Driver getDeletedDriver(String team){
+	public static User getDeletedUser(String team){
 		Session session = null;
 		try {
 			
 			session = HibernateUtil.getSessionAnnotationFactoryFor(team).openSession();
 			session.beginTransaction();
 			
-			Criteria criteria = session.createCriteria(Driver.class);
-			criteria.add(Restrictions.eq("username", DELETED_DRIVER));
+			Criteria criteria = session.createCriteria(User.class);
+			criteria.add(Restrictions.eq("username", DELETED_USER));
 			
-			List<Driver> list = criteria.list();
+			List<User> list = criteria.list();
 			if(list.size() == 0){
-				storeDriverInfo(team, DELETED_DRIVER, DELETED_DRIVER, "0", new Date(), DELETED_DRIVER, Application.STANDARD_IMAGE_NOT_FOUND);
-				return getDeletedDriver(team);
+				storeUserInfo(team, DELETED_USER, DELETED_USER, "0", DELETED_USER, Application.STANDARD_IMAGE_NOT_FOUND);
+				return getDeletedUser(team);
 			} else {
 				return list.get(0);
 			}
@@ -340,54 +334,23 @@ public class DriverDao {
 	}
 	
 	
-	/**
-	 * 
-	 * @return unregistered driver
-	 */
-	public static Driver getUnregisteredDriver(String team){
-		Session session = null;
-		try {
-			
-			session = HibernateUtil.getSessionAnnotationFactoryFor(team).openSession();
-			session.beginTransaction();
-			
-			Criteria criteria = session.createCriteria(Driver.class);
-			criteria.add(Restrictions.eq("username", UNREGISTERED_DRIVER));
-			
-			List<Driver> list = criteria.list();
-			if(list.size() == 0){
-				storeDriverInfo(team, UNREGISTERED_DRIVER, UNREGISTERED_DRIVER, "0", new Date(), UNREGISTERED_DRIVER, Application.STANDARD_IMAGE_NOT_FOUND);
-				return getUnregisteredDriver(team);
-			} else {
-				return list.get(0);
-			}
-		} catch (Exception e){
-			e.printStackTrace();
-		} finally {
-			if(session!=null){
-				session.close();
-			}
-		}
-		
-		return null;
-	}
 	
 	/**
 	 * 
 	 * @param username
 	 * @return
 	 */
-	public static Driver getDriver(String team, String username){
+	public static User getUser(String team, String username){
 		Session session = null;
 		try {
 			
 			session = HibernateUtil.getSessionAnnotationFactoryFor(team).openSession();
 			session.beginTransaction();
 			
-			Criteria criteria = session.createCriteria(Driver.class);
+			Criteria criteria = session.createCriteria(User.class);
 			criteria.add(Restrictions.eq("username", username));
 			
-			List<Driver> list = criteria.list();
+			List<User> list = criteria.list();
 			if(list.size() == 1){
 				return list.get(0);
 			}
@@ -407,7 +370,7 @@ public class DriverDao {
 	 * @param username
 	 * @return
 	 */
-	public static JSONObject getDriverInfo(String team, String username){
+	public static JSONObject getUserInfo(String team, String username){
 	
 		JSONObject result = new JSONObject();
 		Session session = null;
@@ -416,28 +379,27 @@ public class DriverDao {
 			session = HibernateUtil.getSessionAnnotationFactoryFor(team).openSession();
 			session.beginTransaction();
 			
-			Criteria criteria = session.createCriteria(Driver.class);
+			Criteria criteria = session.createCriteria(User.class);
 			criteria.add(Restrictions.eq("username", username));
 			
-			List<Driver> list = criteria.list();
+			List<User> list = criteria.list();
 			if(list.size() <= 1){
 				if(list.size() == 0){
 					//No user found
 					result.put(Application.RESULT, Application.ERROR);
-					result.put(Application.ERROR_MESSAGE, "No driver with username - " + username + " found");
+					result.put(Application.ERROR_MESSAGE, "No user with username - " + username + " found");
 				} else {
-					Iterator<Driver> driverList = list.iterator();
-					Driver driver = driverList.next();
-					JSONObject driverJson = new JSONObject();
-					driverJson.put("name", driver.getName());
-					driverJson.put("username", driver.getUsername());
-					driverJson.put("contactNumber", driver.getContactNumber());
-					driverJson.put("recordCreationTime", driver.getRecordCreationTime());
-					driverJson.put("dateOfJoining", driver.getDateOfJoining());
-					driverJson.put("image", driver.getImage());
-					JSONArray driverArray = new JSONArray();
-					driverArray.put(driverJson);
-					result.put(Application.RESULT, driverArray);
+					Iterator<User> userList = list.iterator();
+					User user = userList.next();
+					JSONObject userJson = new JSONObject();
+					userJson.put("name", user.getName());
+					userJson.put("username", user.getUsername());
+					userJson.put("contactNumber", user.getContactNumber());
+					userJson.put("recordCreationTime", user.getRecordCreationTime());
+					userJson.put("image", user.getImage());
+					JSONArray userArray = new JSONArray();
+					userArray.put(userJson);
+					result.put(Application.RESULT, userArray);
 				}
 			} else {
 				//LOG ERROR HERE ONCE LOGGER IS INTEGRATED
@@ -459,42 +421,36 @@ public class DriverDao {
 	}
 	
 	/**
-	 * Delete driver
+	 * Delete user
 	 * @param username
 	 * @return
 	 */
-	public static JSONObject deleteDriver(String team, String username) {
+	public static JSONObject deleteUser(String team, String username) {
 		
 		JSONObject result = new JSONObject();
 		Session session = null;
 		try {
 			session = HibernateUtil.getSessionAnnotationFactoryFor(team).openSession();
 			session.beginTransaction();
-			Criteria criteria = session.createCriteria(Driver.class);
+			Criteria criteria = session.createCriteria(User.class);
 			criteria.add(Restrictions.eq("username", username));
 			
-			List<Driver> list = criteria.list();
+			List<User> list = criteria.list();
 			if(list.size() <= 1){
 				if(list.size() == 0){
 					//No user found
 					result.put(Application.RESULT, Application.ERROR);
-					result.put(Application.ERROR_MESSAGE, "No driver with username " + username + " found");
+					result.put(Application.ERROR_MESSAGE, "No user with username " + username + " found");
 				} else {
-					Driver driverToDelete = list.get(0);
-					boolean locationRecordsUpdated = LocationDao.markDriverAsDeleted(team, driverToDelete);	//update rows in location table as "driver_deleted" 
-					
-					if(locationRecordsUpdated){
-						session.delete(driverToDelete);
-						session.getTransaction().commit();
-						result.put(Application.RESULT, Application.SUCCESS);
-					} else {
-						result = SystemUtils.generateErrorMessage("Failed to delete location records for driver "+driverToDelete.getUsername());
-					}
+					User userToDelete = list.get(0);
+					session.delete(userToDelete);
+					session.getTransaction().commit();
+					result.put(Application.RESULT, Application.SUCCESS);
 				}
 			} else {
 				//LOG ERROR HERE ONCE LOGGER IS INTEGRATED
 				System.out.println("ERROR. MORE THAN 1 USERS WITH username :"+username+" FOUND");
-				result = SystemUtils.generateErrorMessage("More than 1 driver with username "+username + " found");
+				result = SystemUtils.generateErrorMessage("More than 1 user with username "+username + " found");
 			}
 		} catch(Exception e){
 			e.printStackTrace();

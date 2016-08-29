@@ -1,9 +1,6 @@
 package com.AngelTwo;
 
 import java.io.InputStream;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.DELETE;
@@ -20,16 +17,17 @@ import javax.ws.rs.core.Response;
 import org.json.JSONObject;
 
 import gabriel.application.Application;
-import gabriel.hibernate.dao.DriverDao;
+import gabriel.hibernate.dao.UserDao;
 import gabriel.utilities.SystemUtils;  
 
-@Path("/driver")
-public class DriverService {
+@Path("/{company}/user")
+public class UserService {
 	
 	@Path("/{username}")
 	@Produces(MediaType.APPLICATION_JSON)
 	@DELETE
-	public static Response deleteDriver(@Context HttpServletRequest request, @Context ServletContext context
+	public static Response deleteUser(@Context HttpServletRequest request, 
+			@Context ServletContext context,  @PathParam("company") String company
 			, @PathParam("username") String username){
 		
 		if(!Application.sessionIsValid(request)){
@@ -39,7 +37,7 @@ public class DriverService {
 		
 		JSONObject result = null;
 		try {
-			result = DriverDao.deleteDriver(Application.getTeam(request), String.valueOf(username));
+			result = UserDao.deleteUser(Application.getTeam(request), String.valueOf(username));
 			return Response.status(Response.Status.OK).entity(result.toString()).build();
 		} catch (Exception e) {
 			result = new JSONObject();
@@ -52,13 +50,12 @@ public class DriverService {
 	@POST
 	@Path("/verify")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response verifyDriver(@Context HttpServletRequest request, @Context ServletContext context, InputStream is){
+	public Response verifyUser(@Context HttpServletRequest request, @Context ServletContext context, InputStream is){
 		
 		if(!Application.sessionIsValid(request)){
 			return Response.status(Response.Status.BAD_REQUEST)
 					.entity(Application.getTeamNameForSession(request).toString()).build();
 		}
-		
 		
 		JSONObject result = null;
 		try {
@@ -66,7 +63,7 @@ public class DriverService {
 			JSONObject inputJson = new JSONObject(inputStream);
 			String username = inputJson.getString("username").trim();
 			String password = inputJson.getString("password").trim();
-			result = DriverDao.driverExists(Application.getTeam(request), username, password);						
+			result = UserDao.userExists(Application.getTeam(request), username, password);						
 			return Response.status(200).entity(result.toString()).build();
 		} catch(Exception e){
 			e.printStackTrace();
@@ -79,18 +76,16 @@ public class DriverService {
 	
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response fetchAllDrivers(@Context HttpServletRequest request, 
-			@Context ServletContext context){
+	public Response fetchAllUsers(@Context HttpServletRequest request, @Context ServletContext context,  @PathParam("company") String company){
 		
 		if(!Application.sessionIsValid(request)){
 			return Response.status(Response.Status.BAD_REQUEST)
 					.entity(Application.getTeamNameForSession(request).toString()).build();
 		}
 		
-		
 		JSONObject result = null;
 		try {
-			result = DriverDao.getAllDrivers(Application.getTeam(request));			
+			result = UserDao.getAllUsers(company);			
 			SystemUtils.createUserImageInTempCache(Application.getTeam(request), context, result);			
 			return Response.status(200).entity(result.toString()).build();
 		} catch(Exception e){
@@ -105,16 +100,16 @@ public class DriverService {
 	@GET
 	@Path("/{username}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Response fetchDriver(@Context HttpServletRequest request, 
-			@Context ServletContext context, @PathParam(value = "username") String username){
+	public Response fetchUser(@Context HttpServletRequest request, @Context ServletContext context, @PathParam(value = "username") String username){
 		
 		if(!Application.sessionIsValid(request)){
-			return Response.status(Response.Status.BAD_REQUEST).entity(Application.getTeamNameForSession(request).toString()).build();
+			return Response.status(Response.Status.BAD_REQUEST)
+					.entity(Application.getTeamNameForSession(request).toString()).build();
 		}
 		
 		JSONObject result = null;
 		try {
-			result = DriverDao.getDriverInfo(Application.getTeam(request), username);			
+			result = UserDao.getUserInfo(Application.getTeam(request), username);			
 			SystemUtils.createUserImageInTempCache(Application.getTeam(request), context, result);			
 			return Response.status(200).entity(result.toString()).build();
 		} catch(Exception e){
@@ -128,7 +123,7 @@ public class DriverService {
 
 
 	@PUT
-	public Response editDriver(@Context HttpServletRequest request, InputStream is) {
+	public Response editUser(@Context HttpServletRequest request, InputStream is) {
 		
 		if(!Application.sessionIsValid(request)){
 			return Response.status(Response.Status.BAD_REQUEST)
@@ -140,7 +135,7 @@ public class DriverService {
 
 			JSONObject inputJson = SystemUtils.convertInputStreamToJSON(is);		
 			String missingFields = "";
-			String name = null, username = null, password = "", contact, doj, image = null;
+			String name = null, username = null, password = "", contact, image = null;
 			
 			if(inputJson.has("name")){
 				name = inputJson.getString("name");
@@ -169,12 +164,7 @@ public class DriverService {
 			} else {
 				contact = "";
 			}
-			
-			if(inputJson.has("dateOfJoining")){
-				doj = inputJson.getString("dateOfJoining");
-			} else {
-				doj = "";
-			}
+
 			
 			//process image
 			if(inputJson.has("image")){
@@ -196,8 +186,8 @@ public class DriverService {
 				return Response.status(400).entity(result.toString()).build();
 			}
 			
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-			result = DriverDao.editDriverInfo(Application.getTeam(request), username, name, contact, sdf.parse(doj), password, image);
+
+			result = UserDao.editUserInfo(Application.getTeam(request), username, name, contact, password, image);
 			
 			if(result.getString(Application.RESULT).equals(Application.SUCCESS)){
 				return Response.status(200).entity(result.toString()).build();	
@@ -216,7 +206,7 @@ public class DriverService {
 	}
 	
 	@POST
-	public Response createDriver(@Context HttpServletRequest request, InputStream is) {
+	public Response createUser(@Context HttpServletRequest request, InputStream is) {
 		
 		if(!Application.sessionIsValid(request)){
 			return Response.status(Response.Status.BAD_REQUEST)
@@ -228,7 +218,7 @@ public class DriverService {
 
 			JSONObject inputJson = SystemUtils.convertInputStreamToJSON(is);		
 			String missingFields = "";
-			String name = null, username = null, password = null, contact, doj, image = null;
+			String name = null, username = null, password = null, contact, image = null;
 			
 			if(inputJson.has("name")){
 				name = inputJson.getString("name");
@@ -263,11 +253,6 @@ public class DriverService {
 				contact = "";
 			}
 			
-			if(inputJson.has("doj")){
-				doj = inputJson.getString("doj");
-			} else {
-				doj = "";
-			}
 			
 			//process image
 			if(inputJson.has("image")){
@@ -282,15 +267,8 @@ public class DriverService {
 				return Response.status(400).entity(result.toString()).build();
 			}
 			
-			SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-			Date date = null;
-			
-			try {
-				date = sdf.parse(doj);
-			} catch(Exception e){
-				e.printStackTrace();
-			}
-			result = DriverDao.storeDriverInfo(Application.getTeam(request), username, name, contact, date, password, image);
+
+			result = UserDao.storeUserInfo(Application.getTeam(request), username, name, contact, password, image);
 			
 			if(result.getString(Application.RESULT).equals(Application.SUCCESS)){
 				return Response.status(200).entity(result.toString()).build();	

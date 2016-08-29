@@ -32,16 +32,16 @@ public class LocationDao {
 	 * @param driverUserName
 	 * @return
 	 */
-	public static boolean markDriverAsDeleted(Driver driverToDelete){
+	public static boolean markDriverAsDeleted(String team, Driver driverToDelete){
 		//run raw query to void delay in case of large number of rows
 		Session session = null;
 		try {
-			session = HibernateUtil.getSessionAnnotationFactory().openSession();
+			session = HibernateUtil.getSessionAnnotationFactoryFor(team).openSession();
 			session.beginTransaction();
 			String hql = "UPDATE Location set driver = :deleted_driver "  + 
 		             "WHERE driver = :driver";
 			Query query = session.createQuery(hql);
-			query.setParameter("deleted_driver", DriverDao.getDeletedDriver());
+			query.setParameter("deleted_driver", DriverDao.getDeletedDriver(team));
 			query.setParameter("driver", driverToDelete);
 			int result = query.executeUpdate();
 			System.out.println("Location ( For Driver ) rows affected: " + result);
@@ -63,16 +63,16 @@ public class LocationDao {
 	 * @param vehicleToDelete
 	 * @return
 	 */
-	public static boolean markVehicleAsDeleted(Vehicle vehicleToDelete){
+	public static boolean markVehicleAsDeleted(String team, Vehicle vehicleToDelete){
 		//run raw query to void delay in case of large number of rows
 		Session session = null;
 		try {
-			session = HibernateUtil.getSessionAnnotationFactory().openSession();
+			session = HibernateUtil.getSessionAnnotationFactoryFor(team).openSession();
 			session.beginTransaction();
 			String hql = "UPDATE Location set vehicle = :deleted_vehicle "  + 
 		             "WHERE vehicle = :vehicle";
 			Query query = session.createQuery(hql);
-			query.setParameter("deleted_vehicle", VehicleDao.getDeletedVehicle());
+			query.setParameter("deleted_vehicle", VehicleDao.getDeletedVehicle(team));
 			query.setParameter("vehicle", vehicleToDelete);
 			int result = query.executeUpdate();
 			System.out.println("Location ( for vehicle ) rows affected: " + result);
@@ -92,11 +92,11 @@ public class LocationDao {
 	 * Get last known location for every vehicle
 	 * @return
 	 */
-	public static JSONObject getLastKnownLocationForAllVehicles(){
+	public static JSONObject getLastKnownLocationForAllVehicles(String team){
 		JSONObject result = new JSONObject();
 		Session session = null;
 		try {
-			List<Vehicle> vehiclesList = VehicleDao.getAllVehiclesList();
+			List<Vehicle> vehiclesList = VehicleDao.getAllVehiclesList(team);
 			
 			if(vehiclesList == null){
 				throw new Exception("Failed to retieve vehicles");
@@ -105,7 +105,7 @@ public class LocationDao {
 			}
 			
 			Iterator<Vehicle> iterator = vehiclesList.iterator();
-			session = HibernateUtil.getSessionAnnotationFactory().openSession();
+			session = HibernateUtil.getSessionAnnotationFactoryFor(team).openSession();
 			JSONArray vehicleArray = new JSONArray();
 			while(iterator.hasNext()){
 				
@@ -115,7 +115,7 @@ public class LocationDao {
 				Criteria criteria = session.createCriteria(Location.class);
 				criteria.add(Restrictions.eq("vehicle", vehicle));
 				criteria.add(Restrictions.gt("mBearing", 0.0));
-				criteria.add(Restrictions.ne("driver", DriverDao.getDeletedDriver()));
+				criteria.add(Restrictions.ne("driver", DriverDao.getDeletedDriver(team)));
 				criteria.addOrder(Order.desc("mTime"));
 				criteria.setMaxResults(1);
 				
@@ -175,7 +175,7 @@ public class LocationDao {
 	 * @param mBearing
 	 * @return
 	 */
-	public static String storeLocationPacket(double mLatitude, 
+	public static String storeLocationPacket(String team, double mLatitude, 
 									double mLongitude, 
 									double mAccuracy, 
 									double mSpeed, 
@@ -189,24 +189,24 @@ public class LocationDao {
 									String username,
 									String rawPacket){
 		
-		Vehicle vehicle = VehicleDao.getVehicle(uniqueId);
-		Driver driver = DriverDao.getDriver(username);
+		Vehicle vehicle = VehicleDao.getVehicle(team, uniqueId);
+		Driver driver = DriverDao.getDriver(team, username);
 		if(vehicle == null){
 			System.out.println("Vehicle with ID "+uniqueId+" NOT found");
 			//return "Vehicle with ID " + uniqueId + " NOT found";
-			vehicle = VehicleDao.getUnregisteredVehicle();
+			vehicle = VehicleDao.getUnregisteredVehicle(team);
 		}
 		
 		if(driver == null){
 			System.out.println("Driver with ursername "+username + " not found");
 			//return "Driver with username " + username + " NOT found";
-			driver = DriverDao.getUnregisteredDriver();
+			driver = DriverDao.getUnregisteredDriver(team);
 		}
 		
 		long saveId = -1;
 		Session session = null;
 		try {
-			session = HibernateUtil.getSessionAnnotationFactory().openSession();
+			session = HibernateUtil.getSessionAnnotationFactoryFor(team).openSession();
 			session.beginTransaction();
 			Location location = new Location();
 			location.setmAccuracy(mAccuracy);
@@ -246,7 +246,7 @@ public class LocationDao {
 				session.close();
 			}
 			if(saveId!=-1){
-				Osrm.snapLocation(saveId);
+				Osrm.snapLocation(team, saveId);
 			}
 		}
 	}
@@ -258,13 +258,13 @@ public class LocationDao {
 	 * @param minAccuracy
 	 * @return
 	 */
-	public static JSONArray getLocationJson(int numOfRecords, int minAccuracy){
+	public static JSONArray getLocationJson(String team, int numOfRecords, int minAccuracy){
 		
 		JSONArray locationArray = new JSONArray();
 		
 		Session session = null;
 		try {
-			session = HibernateUtil.getSessionAnnotationFactory().openSession();
+			session = HibernateUtil.getSessionAnnotationFactoryFor(team).openSession();
 			session.beginTransaction();
 			Criteria count = session.createCriteria(Location.class);
 	        count.setProjection(Projections.rowCount());
@@ -320,7 +320,7 @@ public class LocationDao {
 	 * @param toDate
 	 * @return
 	 */
-	public static JSONObject getLocationJsonForVehicle(String vehicleUniqueId, Date fromDate, Date toDate){
+	public static JSONObject getLocationJsonForVehicle(String team, String vehicleUniqueId, Date fromDate, Date toDate){
 		
 		JSONObject result = new JSONObject();
 		JSONArray locationArray = new JSONArray();
@@ -328,13 +328,13 @@ public class LocationDao {
 		Session session = null;
 		try {
 			
-			Vehicle vehicle = VehicleDao.getVehicle(vehicleUniqueId);
+			Vehicle vehicle = VehicleDao.getVehicle(team, vehicleUniqueId);
 			
 			if(vehicle==null){
 				return SystemUtils.generateErrorMessage("Vehicle with uniqueID "+vehicleUniqueId+" NOT found");
 			}
 			
-			session = HibernateUtil.getSessionAnnotationFactory().openSession();
+			session = HibernateUtil.getSessionAnnotationFactoryFor(team).openSession();
 			session.beginTransaction();
 			Criteria count = session.createCriteria(Location.class);
 	        count.setProjection(Projections.rowCount());

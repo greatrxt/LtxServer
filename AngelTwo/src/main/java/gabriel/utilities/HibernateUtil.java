@@ -1,8 +1,6 @@
 package gabriel.utilities;
 
-import java.io.File;
-
-import org.hibernate.Session;
+import java.util.HashMap;
 import org.hibernate.SessionFactory;
 import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
@@ -15,16 +13,38 @@ import gabriel.hibernate.entity.Vehicle;
 
 public class HibernateUtil {
 
-	//XML based configuration
-	//private static SessionFactory sessionFactory;
+
 	
 	//Annotation based configuration
-	private static SessionFactory sessionAnnotationFactory;
-    private static SessionFactory buildSessionAnnotationFactory() {
+	//private static SessionFactory sessionAnnotationFactory;
+	private static HashMap<String, SessionFactory> sessionAnnotationFactoryMap = new HashMap<>();
+	
+    private static SessionFactory buildSessionAnnotationFactory(String schemaName) {
     	try {
+    		
+    		DbUtils.createSchemaIfNotExists(schemaName);
             // Create the SessionFactory from hibernate.cfg.xml
         	Configuration configuration = new Configuration();
         	configuration.configure("hibernate.cfg.xml");
+        	//configuration.configure();
+        	/*configuration.setProperty("hibernate.connection.driver_class", "org.postgresql.Driver");
+        	configuration.setProperty("hibernate.connection.url", "jdbc:postgresql://localhost:5432/"+"LocTrack");
+        	configuration.setProperty("hibernate.connection.username", "postgres");
+        	configuration.setProperty("hibernate.connection.password", "admin");
+        	configuration.setProperty("hibernate.dialect", "org.hibernate.dialect.PostgreSQLDialect");
+        	configuration.setProperty("hibernate.hbm2ddl.auto", "create");
+        	
+        	configuration.setProperty("hibernate.show_sql", "true");
+        	configuration.setProperty("format_sql", "true");
+        	configuration.setProperty("use_sql_comments", "true");
+        	configuration.setProperty("hibernate.c3p0.min_size", "5");
+        	configuration.setProperty("hibernate.c3p0.max_size", "20");
+        	configuration.setProperty("hibernate.c3p0.timeout", "300");
+        	configuration.setProperty("hibernate.c3p0.max_statements", "50");
+        	configuration.setProperty("hibernate.c3p0.idle_test_period", "3000");*/
+        	
+        	configuration.setProperty("hibernate.default_schema", schemaName);
+        	
         	System.out.println("Hibernate Annotation Configuration loaded");
         	
         	ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().applySettings(configuration.getProperties()).build();
@@ -49,30 +69,25 @@ public class HibernateUtil {
         }
 	}
 
-    public static void saveEntity(Object entity){
-  		Session session = getSessionAnnotationFactory().openSession();
-  		session.beginTransaction();
-  		
-  		try {
-  			session.save(entity);
-  			session.flush();
-  			session.getTransaction().commit();
-  		} catch(Exception e) {
-  			e.printStackTrace();
-  		} finally{
-  			session.close();
-  		}
-  	}
-   
-  
 	
-	public static SessionFactory getSessionAnnotationFactory() {
-		if(sessionAnnotationFactory == null) sessionAnnotationFactory = buildSessionAnnotationFactory();
+	public static SessionFactory getSessionAnnotationFactoryFor(String companyName) {
+		
+		SessionFactory sessionAnnotationFactory = null;
+		
+		if(sessionAnnotationFactoryMap.containsKey(companyName)){
+			sessionAnnotationFactory = sessionAnnotationFactoryMap.get(companyName);
+		}
+		
+		if(sessionAnnotationFactory == null) {
+			sessionAnnotationFactory = buildSessionAnnotationFactory(companyName);
+			sessionAnnotationFactoryMap.put(companyName, sessionAnnotationFactory);
+		}
+		
         return sessionAnnotationFactory;
     }
 	
-	public static void CloseSessionFactory() {
-		getSessionAnnotationFactory().close();
+	public static void CloseSessionFactory(String schemaName) {
+		getSessionAnnotationFactoryFor(schemaName).close();
     }
 	
 	

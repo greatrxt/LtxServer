@@ -2,13 +2,13 @@ package com.AngelTwo;
 
 import gabriel.application.Application;
 import gabriel.hibernate.dao.DriverDao;
-import gabriel.hibernate.dao.LocationDao;
 import gabriel.hibernate.dao.VehicleDao;
 import gabriel.utilities.SystemUtils;
 
 import java.io.IOException;
 
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
@@ -17,7 +17,6 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 /**
@@ -25,41 +24,49 @@ import org.json.JSONObject;
  */
 @Path("status")
 public class StatusService {
-
-    /**
-     * Method handling HTTP GET requests. The returned object will be sent
-     * to the client as "text/plain" media type.
-     *
-     * @return String that will be returned as a text/plain response.
-     */
+	
     @GET
-    @Produces(MediaType.TEXT_PLAIN)
-    public String getIt() {
-        return "online";
+    @Path("/set/{team}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response setTeam(@Context HttpServletRequest request, @PathParam("team") String team) {
+    	return Response.status(Response.Status.OK)
+				.entity(Application.setTeamNameForSession(request, team).toString()).build();
     }
     
-/*    @Path("/vehicle/{accuracy}/{maxresults}")
-    @Produces(MediaType.APPLICATION_JSON)
     @GET
-    public Response getVehicleStatus(@PathParam("maxresults") int maxResults, @PathParam("accuracy") int accuracy){
-    	JSONObject vehicleStatus = new JSONObject();
-    	JSONArray locationHistory = LocationDao.getLocationJson(maxResults, accuracy);
-    	vehicleStatus.put("location", locationHistory);
-    	return Response.status(Response.Status.OK).entity(vehicleStatus.toString()).build();
-    }*/
+    @Path("/get")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Response getTeam(@Context HttpServletRequest request) {
+    	
+		if(!Application.sessionIsValid(request)){
+			return Response.status(Response.Status.BAD_REQUEST)
+					.entity(Application.getTeamNameForSession(request).toString()).build();
+		}
+		
+    	return Response.status(Response.Status.OK)
+				.entity(Application.getTeamNameForSession(request).toString()).build();
+    }
+    
     
     @Path("/{queryString}")
     @Produces(MediaType.APPLICATION_JSON)
     @GET
-    public Response getVehicleStatus(@PathParam("queryString") String queryString, @Context ServletContext servletContext){
+    public Response getVehicleStatus(@Context HttpServletRequest request, 
+    		@PathParam("queryString") String queryString, @Context ServletContext servletContext){
+    	
+		if(!Application.sessionIsValid(request)){
+			return Response.status(Response.Status.BAD_REQUEST)
+					.entity(Application.getTeamNameForSession(request).toString()).build();
+		}
+		
     	JSONObject result = new JSONObject();
     	
-    	JSONObject vehicles = VehicleDao.searchVehiclesFor(queryString);
-    	JSONObject drivers = DriverDao.searchDriversFor(queryString);
+    	JSONObject vehicles = VehicleDao.searchVehiclesFor(Application.getTeam(request), queryString);
+    	JSONObject drivers = DriverDao.searchDriversFor(Application.getTeam(request), queryString);
     	
     	try {
-			SystemUtils.createVehicleImageInTempCache(servletContext, vehicles);
-			SystemUtils.createDriverImageInTempCache(servletContext, drivers);
+			SystemUtils.createVehicleImageInTempCache(Application.getTeam(request), servletContext, vehicles);
+			SystemUtils.createUserImageInTempCache(Application.getTeam(request), servletContext, drivers);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
